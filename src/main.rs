@@ -10,14 +10,20 @@ type Req = hyper::Request<hyper::body::Incoming>;
 type ServerError = Box<dyn std::error::Error + Send + Sync>;
 
 enum Route {
-    Invalid,
     Stream,
+    UpdateLog,
+    GetChoices,
+    Choose,
+    Invalid,
 }
 impl Route {
     //Route uri's defined here
     fn from_path<P: AsRef<str>>(path: P) -> Route {
         match path.as_ref() {
             "/stream" => Route::Stream,
+            "/update/log" => Route::UpdateLog,
+            "/update/choices" => Route::GetChoices,
+            "/choose" => Route::Choose,
             _ => Route::Invalid,
         }
     }
@@ -42,7 +48,7 @@ async fn main() -> Result<(), ServerError>{
     }
 }
 
-async fn respond(req: Req) -> Result<Res, String> {
+async fn respond(req: Req) -> Result<Res, ServerError> {
 
     if let Some(uri) = req.uri().path_and_query() {
 
@@ -51,16 +57,22 @@ async fn respond(req: Req) -> Result<Res, String> {
                 let quries = get_queries(uri.query());
             
                 if let Some(name) = quries.get("name") { eprintln!("Name: {name}") } 
-                Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Hello World")))
+                Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Stream")))
             },
-            _ => Err(format!("Invalid path: '{}'", uri.path())),
+            Route::UpdateLog  => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Update Log"))),
+            Route::GetChoices => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Get Choices"))),
+            Route::Choose     => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Choose"))),
+            Route::Invalid    => Err(format!("Invalid path: '{}'", uri.path()).to_string().into()),
         }
     } else {
-        // Note: it's usually better to return a Response
-        // with an appropriate StatusCode instead of an Err.
-        Err("not HTTP/1.1, abort connection".to_string())
+        let res = hyper::Response::builder()
+            .status(hyper::StatusCode::BAD_REQUEST)
+            .body(http_body_util::Full::<hyper::body::Bytes>::from(""))?;
+
+        Ok(res)
     }
 }
+
 fn get_queries<'a>(uri: Option<&'a str>) -> std::collections::HashMap<&'a str, &'a str> {
     if let Some(q) = uri{
         std::collections::HashMap::from_iter(q.split("&").map(|q| {

@@ -39,38 +39,39 @@ async fn main() -> Result<(), ServerError>{
         let io = hyper_util::rt::TokioIo::new(stream);
 
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(io, service_fn(respond)).await
-            {
-                eprintln!("Error with connection: {err:?}");
-            }
+            match http1::Builder::new().serve_connection(io, service_fn(respond)).await{
+                Ok(res) => { res }
+                Err(err) => {
+                    eprintln!("Error with connection: {err:?}");
+                },
+        }
         });
     }
 }
 
 async fn respond(req: Req) -> Result<Res, ServerError> {
 
-    if let Some(uri) = req.uri().path_and_query() {
-
+    let (status, body) = if let Some(uri) = req.uri().path_and_query() {
         match Route::from_path(uri.path()) {
             Route::Stream => {
                 let quries = get_queries(uri.query());
-            
-                if let Some(name) = quries.get("name") { eprintln!("Name: {name}") } 
-                Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Stream")))
+                if let Some(name) = quries.get("name") { eprintln!("Name: {name}") };
+                
+                (hyper::StatusCode::OK, "Stream".to_string())
             },
-            Route::UpdateLog  => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Update Log"))),
-            Route::GetChoices => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Get Choices"))),
-            Route::Choose     => Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Choose"))),
-            Route::Invalid    => Err(format!("Invalid path: '{}'", uri.path()).to_string().into()),
+            Route::UpdateLog  => (hyper::StatusCode::OK, "Update Log".to_string()),
+            Route::GetChoices => (hyper::StatusCode::OK, "Get Choices".to_string()),
+            Route::Choose     => (hyper::StatusCode::OK, "Choose".to_string()),
+            Route::Invalid    => (hyper::StatusCode::NOT_FOUND, format!("Invalid path: '{}'", uri.path())),
         }
     } else {
-        let res = hyper::Response::builder()
-            .status(hyper::StatusCode::BAD_REQUEST)
-            .body(http_body_util::Full::<hyper::body::Bytes>::from(""))?;
+        (hyper::StatusCode::BAD_REQUEST, String::new())
+    };
 
-        Ok(res)
-    }
+    Ok( hyper::Response::builder()
+        .status(status)
+        .body(http_body_util::Full::<hyper::body::Bytes>::from(body))?
+    )
 }
 
 fn get_queries<'a>(uri: Option<&'a str>) -> std::collections::HashMap<&'a str, &'a str> {

@@ -9,7 +9,19 @@ type Req = hyper::Request<hyper::body::Incoming>;
 
 type ServerError = Box<dyn std::error::Error + Send + Sync>;
 
-const STREAM_URI: &str = "/stream";
+enum Route {
+    Invalid,
+    Stream,
+}
+impl Route {
+    //Route uri's defined here
+    fn from_path<P: AsRef<str>>(path: P) -> Route {
+        match path.as_ref() {
+            "/stream" => Route::Stream,
+            _ => Route::Invalid,
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() -> Result<(), ServerError>{
@@ -34,14 +46,14 @@ async fn respond(req: Req) -> Result<Res, String> {
 
     if let Some(uri) = req.uri().path_and_query() {
 
-        let quries = get_queries(uri.query());
+        match Route::from_path(uri.path()) {
+            Route::Stream => {
+                let quries = get_queries(uri.query());
             
-        if uri.path() == STREAM_URI {
-            if let Some(name) = quries.get("name") { eprintln!("Name: {name}") }
-            Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Hello World")))
-        }
-        else {
-            Err("Invalid path".to_string())
+                if let Some(name) = quries.get("name") { eprintln!("Name: {name}") } 
+                Ok(hyper::Response::new(http_body_util::Full::<hyper::body::Bytes>::from("Hello World")))
+            },
+            _ => Err(format!("Invalid path: '{}'", uri.path())),
         }
     } else {
         // Note: it's usually better to return a Response

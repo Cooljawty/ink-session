@@ -44,7 +44,7 @@ async fn main() -> Result<(), ServerError>{
                 Err(err) => {
                     eprintln!("Error with connection: {err:?}");
                 },
-        }
+            }
         });
     }
 }
@@ -55,7 +55,7 @@ async fn respond(req: Req) -> Result<Res, ServerError> {
         match Route::from_path(uri.path()) {
             Route::Stream => {
                 let quries = get_queries(uri.query());
-                if let Some(name) = quries.get("name") { eprintln!("Name: {name}") };
+                if let Some(name) = quries.get("name") { println!("Name: {name}") };
                 
                 (hyper::StatusCode::OK, "Stream".to_string())
             },

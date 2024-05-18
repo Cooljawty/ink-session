@@ -1,4 +1,7 @@
-use tokio::net::{ TcpListener, };
+use tokio::{
+    net::{ TcpListener, },
+    sync::{broadcast, },
+};
 use hyper::{
     server::conn::http1,
     service::service_fn,
@@ -34,22 +37,61 @@ async fn main() -> Result<(), ServerError>{
     let addr = ("127.0.0.1", 8080);
     let listener = TcpListener::bind(addr).await?;
 
+    let (sender, _) = broadcast::channel(10);
+    let sender2 = sender.clone();
+
+    let story_thread = tokio::task::spawn(async move {
+        let story_str = std::fs::read_to_string("test.ink.json").expect("Not a valid file");
+        let mut story = bladeink::story::Story::new(story_str.as_str())?;
+
+        let sender = sender2.clone();
+
+        println!("Starting story");
+        loop {
+            while story.can_continue() {
+                let line = story.cont()?;
+
+                sender.send(line.clone())?;
+                println!("Sent {}", line);
+            }
+
+            let choices = story.get_current_choices();
+
+            if !choices.is_empty() {
+            }
+            else {
+                break;
+            }
+
+        }
+
+        Ok::<(), ServerError>(())
+
+    });
+
     loop { 
         let (stream, _) = listener.accept().await?;
         let io = hyper_util::rt::TokioIo::new(stream);
 
+        let sender = sender.clone();
+
         tokio::task::spawn(async move {
-            match http1::Builder::new().serve_connection(io, service_fn(respond)).await{
+            match http1::Builder::new().serve_connection(io, service_fn(move |req| respond(req, sender.clone().subscribe()))).await{
                 Ok(res) => { res }
                 Err(err) => {
                     eprintln!("Error with connection: {err:?}");
                 },
             }
         });
+
+        //Check story thread
+        if story_thread.is_finished() {
+            return story_thread.await?
+        }
     }
 }
 
-async fn respond(req: Req) -> Result<Res, ServerError> {
+async fn respond(req: Req, mut story_stream: broadcast::Receiver<String>) -> Result<Res, ServerError> {
 
     let (status, body) = if let Some(uri) = req.uri().path_and_query() {
         match Route::from_path(uri.path()) {
@@ -59,7 +101,10 @@ async fn respond(req: Req) -> Result<Res, ServerError> {
                 
                 (hyper::StatusCode::OK, "Stream".to_string())
             },
-            Route::UpdateLog  => (hyper::StatusCode::OK, "Update Log".to_string()),
+            Route::UpdateLog  => {
+                let text = story_stream.recv().await?;
+                (hyper::StatusCode::OK, text)
+            },
             Route::GetChoices => (hyper::StatusCode::OK, "Get Choices".to_string()),
             Route::Choose     => (hyper::StatusCode::OK, "Choose".to_string()),
             Route::Invalid    => (hyper::StatusCode::NOT_FOUND, format!("Invalid path: '{}'", uri.path())),

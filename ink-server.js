@@ -19,6 +19,13 @@ const server = createServer((req, res) => {
 			res.setHeader('Content-Type', 'text/plain');
 			res.end(story.Continue());
 			break;
+		case '/update/choices':
+			res.statusCode = 200;
+			res.setHeader('Content-Type', 'text/plain');
+
+			var i = 1;
+			res.end(JSON.stringify(story.currentChoices.map((c) => c.text)));
+			break;
 		default:
 			res.statusCode = 404;
 			res.setHeader('Content-Type', 'text/plain');

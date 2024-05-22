@@ -24,13 +24,18 @@ class TextLog {
 	}
 
 	getLine(index, story){
+		index -= 1
 		console.log(this.currentLine, this.log)
-		if(index <= this.currentLine) {
+		if(index < this.currentLine) {
 			return this.log[index]
+		} else if (index === this.currentLine) {
+			return story.getCurrentText()
 		} else {
 			if ( story.canContinue ) {
 				this.log.push(story.Continue())
 				this.currentLine += 1
+
+				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 				return this.log[ this.log.length - 1]
 			}
 		}
@@ -39,6 +44,24 @@ class TextLog {
 
 var textlog = new TextLog()
 
+let clients = []
+app.get('/stream', (req, res) => {
+	res.writeHead(200, {
+		'Content-Type': "text/event-stream",
+		'Connection': "keep-alive",
+	})
+
+	res.write("data: Subscribed!\n\n")
+
+	//Save connection handel
+	clients.push({id: 0, response: res })
+
+	req.on('close', () => {
+		console.log(`${clientId} Connection closed`);
+		clients = clients.filter(client => client.id !== clientId);
+	})
+	
+});
 app.get('/update/log', ( req, res) => {
 	let nextLine = textlog.getLine(req.body['line'], story)
 

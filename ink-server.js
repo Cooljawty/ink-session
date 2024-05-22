@@ -15,11 +15,35 @@ app.use(express.urlencoded({extended: true}))
 const hostname = '127.0.0.1';
 const port = 8080;
 
+class TextLog {
+	currentLine = 0;
+
+	constructor() {
+		this.log = [];
+		this.currentLine = 0;
+	}
+
+	getLine(index, story){
+		if(index <= this.currentLine) {
+			return this.log[index]
+		} else {
+			if ( story.canContinue ) {
+				return story.Continue()
+			}
+		}
+	}
+}
+
+var textlog = new TextLog()
+
 app.get('/update/log', ( req, res) => {
-	res.statusCode = 200;
+	let nextLine = textlog.getLine(req.body['line'], story)
+
+	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');
-	res.send(story.Continue());
+	res.send(nextLine);
 });
+
 app.get('/update/choices', ( req, res) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');

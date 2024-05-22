@@ -24,25 +24,20 @@ app.get('/update/choices', ( req, res) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');
 
-	res.send(JSON.stringify(story.currentChoices.map((c) => c.text)));
+	res.send(JSON.stringify(story.currentChoices.map((c) => 
+		`[${c.index}] ${c.text}\ntags:${c.tags}`)));
 });
 app.post('/choose', ( req, res) => {
-	console.log("Method: "+ req.method)
-	console.log("Headers:")
-	for (var h in req.headers) {
-		console.log("\t"+h)
-	}
-	console.log("Content Type: "+req.headers['content-type'])
-	console.log(`Form: `)
-	for ( item in req.body ) {
-		console.log(`\t${item}: ${req.body[item]}`)
-	}
-	res.json(req.body)
+	let choiceIndex = req.body['index']
+	let choice = story.currentChoices[ choiceIndex ]
 
-	//res.statusCode = 200;
-	//res.setHeader('Content-Type', 'text/plain');
+	console.log(`Choosing [${choiceIndex}] ${choice.text}`)
+	story.ChooseChoiceIndex(choiceIndex)
 
-	//res.send(JSON.stringify(story.currentChoices.map((c) => c.text)));
+	res.statusCode = 200;
+	res.setHeader('Content-Type', 'text/plain');
+
+	res.send(res.send(story.canContinue));
 });
 
 app.listen(port, hostname, () => {

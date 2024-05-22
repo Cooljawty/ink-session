@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<body>
+	<h1> Log </h1>
+	<div id="log">
+	</div>
+	<ul id="choices">
+	</ul>
+	<script>
+		var currentLine = 1;
+
+		function update(event){
+			console.log("Getting line", currentLine)
+			let list = document.getElementById("log")
+
+			let index = event.data
+			fetch(`/update/log?line=${currentLine}`)
+				.then((response) => response.text())
+				.then((text) => {
+
+				//currentLine += 1
+
+				let newLine = document.createElement('p')
+
+				newLine.id = `line ${currentLine}`
+				newLine.innerText = text
+
+				console.log(currentLine, ": ", text)
+
+				list.append(newLine)
+			})
+		};
+
+		const evnt = new EventSource('/stream')
+		evnt.addEventListener('New content', update)
+	</script>
+</body>

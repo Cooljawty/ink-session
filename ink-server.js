@@ -56,7 +56,8 @@ app.get('/stream', (req, res) => {
 	res.write("data: Subscribed!\n\n")
 
 	//Save connection handel
-	clients.push({id: 0, response: res })
+	let clientId = 0;
+	clients.push({id: clientId, response: res })
 
 	req.on('close', () => {
 		console.log(`${clientId} Connection closed`);
@@ -65,7 +66,16 @@ app.get('/stream', (req, res) => {
 	
 });
 app.get('/update/log', ( req, res) => {
-	let nextLine = textlog.getLine(req.body['line'], story)
+	let index = req.body['line']
+	if ( req.query != undefined ) {
+		index = req.query['line']
+	}
+
+	console.log(`line = ${index}`)
+
+	let nextLine = textlog.getLine(index, story)
+
+	console.log(nextLine, "\n")
 
 	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');

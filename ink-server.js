@@ -2,7 +2,7 @@
 var Story = require('inkjs').Story;
 
 var fs = require('fs');
-const story_path = "test.ink.json";
+const story_path = "intercept.ink.json";
 var inkFile = fs.readFileSync(story_path, 'UTF-8').replace(/^\uFEFF/, '');
 var story = new Story(inkFile);
 
@@ -24,11 +24,14 @@ class TextLog {
 	}
 
 	getLine(index, story){
+		console.log(this.currentLine, this.log)
 		if(index <= this.currentLine) {
 			return this.log[index]
 		} else {
 			if ( story.canContinue ) {
-				return story.Continue()
+				this.log.push(story.Continue())
+				this.currentLine += 1
+				return this.log[ this.log.length - 1]
 			}
 		}
 	}
@@ -55,7 +58,7 @@ app.post('/choose', ( req, res) => {
 	let choiceIndex = req.body['index']
 	let choice = story.currentChoices[ choiceIndex ]
 
-	console.log(`Choosing [${choiceIndex}] ${choice.text}`)
+	console.log(`Choosing [${choiceIndex}] `); console.log(`${choice.text}`)
 	story.ChooseChoiceIndex(choiceIndex)
 
 	res.statusCode = 200;

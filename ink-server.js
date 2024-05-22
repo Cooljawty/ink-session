@@ -11,6 +11,7 @@ const express = require('express')
 const app = express()
 
 app.use(express.urlencoded({extended: true}))
+app.use(express.static('public'))
 
 const hostname = '127.0.0.1';
 const port = 8080;
@@ -45,6 +46,7 @@ class TextLog {
 var textlog = new TextLog()
 
 let clients = []
+
 app.get('/stream', (req, res) => {
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",

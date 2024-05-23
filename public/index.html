@@ -17,14 +17,18 @@
 				.then((response) => response.text())
 				.then((text) => text)
 
-			let newLine = document.createElement('p')
+			if ( text != undefined ) {
+				let newLine = document.createElement('p')
 
-			newLine.id = `line ${currentLine}`
-			newLine.innerText = text
+				newLine.id = `line ${currentLine}`
+				newLine.innerText = text
 
-			console.log(currentLine, ": ", text)
+				console.log(currentLine, ": ", text)
 
-			list.append(newLine)
+				list.append(newLine)
+
+				currentLine += 1
+			}
 		};
 
 		const evnt = new EventSource('/stream')

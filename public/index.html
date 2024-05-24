@@ -8,9 +8,7 @@
 	<script>
 		var currentLine = 1;
 
-		async function update(event){
-			console.log("Getting line", currentLine)
-
+		async function updateLog(event){
 			let index = event.data
 			let text = await fetch(`/update/log?line=${currentLine}`)
 				.then((response) => response.text())
@@ -27,7 +25,30 @@
 			}
 		};
 
+		async function updateChoices(event){
+			let index = event.data
+			let list = await fetch('/update/choices')
+				.then((response) => response.json())
+				.then((json) => json)
+
+			if ( choices != undefined ) {
+				let choiceList = document.getElementById("choices")
+				let newChoices = []
+				for ( choice of list ) {
+					let newChoice = document.createElement('li')
+					newChoice.innerText = choice.text
+
+					newChoices.push(newChoice)
+
+				}
+
+				choiceList.replaceChildren(...newChoices)
+			}
+		};
+
 		const evnt = new EventSource('/stream')
-		evnt.addEventListener('New content', update)
+		evnt.addEventListener('New content', updateLog)
+		evnt.addEventListener('New content', updateChoices)
+		evnt.addEventListener('New choices', updateChoices)
 	</script>
 </body>

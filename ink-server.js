@@ -33,6 +33,10 @@ class TextLog {
 				this.log.push(story.Continue())
 				this.currentLine += 1
 
+				if ( story.currentChoices.leng != 0 ){
+					clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
+				}
+
 				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 				return this.log[ this.log.length - 1]
 			}
@@ -48,6 +52,7 @@ class TextLog {
 		this.log.push(story.Continue())
 		this.currentLine += 1
 		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
+		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 	}
 }
 
@@ -91,11 +96,13 @@ app.get('/update/log', ( req, res) => {
 });
 
 app.get('/update/choices', ( req, res) => {
-	res.statusCode = 200;
-	res.setHeader('Content-Type', 'text/plain');
-
-	res.send(JSON.stringify(story.currentChoices.map((c) => 
-		`[${c.index}] ${c.text}\ntags:${c.tags}`)));
+	let choices = story.currentChoices.map( choice => {
+		return {
+			text: choice.text,
+			tags: choice.tags,
+		}
+	})
+	res.send(choices);
 });
 
 app.post('/choose', ( req, res) => {

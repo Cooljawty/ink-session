@@ -10,7 +10,6 @@
 
 		async function update(event){
 			console.log("Getting line", currentLine)
-			let list = document.getElementById("log")
 
 			let index = event.data
 			let text = await fetch(`/update/log?line=${currentLine}`)
@@ -19,13 +18,10 @@
 
 			if ( text != undefined ) {
 				let newLine = document.createElement('p')
-
 				newLine.id = `line ${currentLine}`
-				newLine.innerText = text
+				newLine.innerText = text.trimEnd()
 
-				console.log(currentLine, ": ", text)
-
-				list.append(newLine)
+				document.getElementById("log").append(newLine)
 
 				currentLine += 1
 			}

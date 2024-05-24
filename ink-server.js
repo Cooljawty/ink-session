@@ -26,11 +26,8 @@ class TextLog {
 
 	getLine(index, story){
 		index -= 1
-		console.log(this.currentLine, this.log)
-		if(index < this.currentLine) {
+		if(index <= this.currentLine) {
 			return this.log[index]
-		} else if ( index === this.currentLine ) {
-			return story.currentText
 		} else {
 			if ( story.canContinue ) {
 				this.log.push(story.Continue())
@@ -48,7 +45,8 @@ class TextLog {
 		console.log(`Choosing [${index}] `); console.log(`${choice.text}`)
 		story.ChooseChoiceIndex(index)
 
-		//this.currentLine += 1
+		this.log.push(story.Continue())
+		this.currentLine += 1
 		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 	}
 }

@@ -29,8 +29,8 @@ class TextLog {
 		console.log(this.currentLine, this.log)
 		if(index < this.currentLine) {
 			return this.log[index]
-		} else if (index === this.currentLine) {
-			return story.getCurrentText()
+		} else if ( index === this.currentLine ) {
+			return story.currentText
 		} else {
 			if ( story.canContinue ) {
 				this.log.push(story.Continue())
@@ -40,6 +40,16 @@ class TextLog {
 				return this.log[ this.log.length - 1]
 			}
 		}
+	}
+
+	makeChoice(index, story){
+		let choice = story.currentChoices[index]
+
+		console.log(`Choosing [${index}] `); console.log(`${choice.text}`)
+		story.ChooseChoiceIndex(index)
+
+		//this.currentLine += 1
+		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 	}
 }
 
@@ -89,12 +99,12 @@ app.get('/update/choices', ( req, res) => {
 	res.send(JSON.stringify(story.currentChoices.map((c) => 
 		`[${c.index}] ${c.text}\ntags:${c.tags}`)));
 });
-app.post('/choose', ( req, res) => {
-	let choiceIndex = req.body['index']
-	let choice = story.currentChoices[ choiceIndex ]
 
-	console.log(`Choosing [${choiceIndex}] `); console.log(`${choice.text}`)
-	story.ChooseChoiceIndex(choiceIndex)
+app.post('/choose', ( req, res) => {
+	textlog.makeChoice(req.body['index'], story)
+	if ( req.query != undefined ) {
+		index = req.query['line']
+	}
 
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');

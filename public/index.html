@@ -1,6 +1,8 @@
 <!DOCTYPE html>
+<head>
+	<link rel="stylesheet", href="style.css"
+</head>
 <body>
-	<h1> Log </h1>
 	<div id="log">
 	</div>
 	<div id="choices">
@@ -9,6 +11,7 @@
 		var currentLine = 1;
 
 		async function updateLog(event){
+			console.log("Updating log")
 			let index = event.data
 			if(index <= currentLine) { return }
 
@@ -28,6 +31,7 @@
 		};
 
 		async function updateChoices(event){
+			console.log("Updating choices")
 			event.preventDefault()
 
 			let index = event.data
@@ -51,6 +55,7 @@
 				function appendChoice(text, onclick) {
 					let newChoice = document.createElement('a')
 					newChoice.href = '#'
+					newChoice.className = "choice"
 					newChoice.innerText = text
 					newChoice.onclick = onclick
 
@@ -68,7 +73,7 @@
 		evnt.addEventListener('New content', updateChoices)
 		evnt.addEventListener('New choices', updateChoices)
 
-		window.onload = updateLog
-		window.onload = updateChoices
+		window.addEventListener('load', updateLog)
+		window.addEventListener('load', updateChoices)
 	</script>
 </body>

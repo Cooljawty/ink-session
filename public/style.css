@@ -1,0 +1,9 @@
+p, a {
+	color: black;
+	line-height: 1.7em;
+	font-size: 13pt;
+}
+
+.choice:visited{
+	color: black;
+}

@@ -3,8 +3,8 @@
 	<h1> Log </h1>
 	<div id="log">
 	</div>
-	<ul id="choices">
-	</ul>
+	<div id="choices">
+	</div>
 	<script>
 		var currentLine = 1;
 
@@ -35,11 +35,17 @@
 				let choiceList = document.getElementById("choices")
 				let newChoices = []
 				for ( choice of list ) {
-					let newChoice = document.createElement('li')
+					let newChoice = document.createElement('button')
 					newChoice.innerText = choice.text
 
-					newChoices.push(newChoice)
+					newChoice.name = "index"
+					newChoice.value = choice.index
+					newChoice.type = "submit"
 
+					newChoice.onclick = (event) => {
+								fetch(`/choose?index=${choice.index}`, {method: "post"}).await
+					}
+					newChoices.push(newChoice)
 				}
 
 				choiceList.replaceChildren(...newChoices)

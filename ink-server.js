@@ -46,7 +46,6 @@ class TextLog {
 	makeChoice(index, story){
 		let choice = story.currentChoices[index]
 
-		console.log(`Choosing [${index}] `); console.log(`${choice.text}`)
 		story.ChooseChoiceIndex(index)
 
 		this.log.push(story.Continue())
@@ -98,6 +97,7 @@ app.get('/update/log', ( req, res) => {
 app.get('/update/choices', ( req, res) => {
 	let choices = story.currentChoices.map( choice => {
 		return {
+			index: choice.index,
 			text: choice.text,
 			tags: choice.tags,
 		}
@@ -106,13 +106,13 @@ app.get('/update/choices', ( req, res) => {
 });
 
 app.post('/choose', ( req, res) => {
-	textlog.makeChoice(req.body['index'], story)
+	let index = req.body['index']
 	if ( req.query != undefined ) {
-		index = req.query['line']
+		index = req.query['index']
 	}
 
-	res.statusCode = 200;
-	res.setHeader('Content-Type', 'text/plain');
+	console.log(`Choice ${index}`)
+	textlog.makeChoice(index, story)
 
 	res.send(res.send(story.canContinue));
 });

@@ -25,9 +25,8 @@ class TextLog {
 	}
 
 	getLine(index, story){
-		index -= 1
 		if(index <= this.currentLine) {
-			return this.log[index]
+			return this.log[index-1]
 		} else {
 			if ( story.canContinue ) {
 				this.log.push(story.Continue())

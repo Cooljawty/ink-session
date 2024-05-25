@@ -90,7 +90,10 @@ app.get('/update/log', ( req, res) => {
 
 	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');
-	res.send(nextLine);
+	res.send({
+		text: nextLine,
+		currentLine: textlog.currentLine,
+	});
 });
 
 app.get('/update/choices', ( req, res) => {

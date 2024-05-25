@@ -15,9 +15,8 @@
 			let index = event.data
 			if(index <= currentLine) { return }
 
-			let text = await fetch(`/update/log?line=${currentLine}`)
-				.then((response) => response.text())
-				.then((text) => text)
+			const {text, currentLine: line} = await fetch(`/update/log?line=${currentLine}`)
+				.then((response) => response.json())
 
 			if ( text != undefined ) {
 				let newLine = document.createElement('p')

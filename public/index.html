@@ -28,6 +28,8 @@
 		};
 
 		async function updateChoices(event){
+			event.preventDefault()
+
 			let index = event.data
 			let list = await fetch('/update/choices')
 				.then((response) => response.json())
@@ -37,25 +39,24 @@
 				let choiceList = document.getElementById("choices")
 				let newChoices = []
 				for ( choice of list ) {
-					let newChoice = document.createElement('button')
-					newChoice.innerText = choice.text
-
-					newChoice.name = "index"
-					newChoice.value = choice.index
-					newChoice.type = "submit"
-
-					newChoice.onclick = (event) => {
-								fetch(`/choose?index=${choice.index}`, {method: "post"}).await
-					}
-					newChoices.push(newChoice)
+					appendChoice( choice.text, (event) => {
+						fetch(`/choose?index=${choice.index}`, {method: "post"}).await
+					})
 				}
 
 				if ( newChoices.length === 0 ){
-					let contButton = document.createElement('button')
-					contButton.innerText = "continue.."
-					contButton.onclick = updateLog
+					appendChoice("continue..", updateLog)
+				}
 
-					newChoices.push(contButton)
+				function appendChoice(text, onclick) {
+					let newChoice = document.createElement('a')
+					newChoice.href = '#'
+					newChoice.innerText = text
+					newChoice.onclick = onclick
+
+					let choiceParagraph = document.createElement('p')
+					choiceParagraph.append(newChoice)
+					newChoices.push(choiceParagraph)
 				}
 
 				choiceList.replaceChildren(...newChoices)
@@ -68,5 +69,6 @@
 		evnt.addEventListener('New choices', updateChoices)
 
 		window.onload = updateLog
+		window.onload = updateChoices
 	</script>
 </body>

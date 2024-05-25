@@ -1,9 +1,27 @@
-p, a {
+.storytext {
 	color: black;
 	line-height: 1.7em;
 	font-size: 13pt;
 }
 
+.choice{
+	margin-left: 1rem;
+}
 .choice:visited{
 	color: black;
 }
+.choice:hover{
+	color: grey;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.storytext{
+		animation: fadein 0.5s
+	}
+}
+
+@keyframes fadein{
+	from{ opacity: 0;}
+	to  { opacity: 1;}
+}
+

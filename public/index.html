@@ -7,11 +7,11 @@
 	</div>
 	<div id="choices">
 	</div>
+
 	<script>
 		var currentLine = 1;
-
+		
 		async function updateLog(event){
-			console.log("Updating log")
 			let index = event.data
 			if(index <= currentLine) { return }
 
@@ -24,6 +24,8 @@
 				newLine.id = `line ${currentLine}`
 				newLine.innerText = text.trimEnd()
 
+				newLine.classList.add("storytext")
+
 				document.getElementById("log").append(newLine)
 
 				currentLine += 1
@@ -31,7 +33,6 @@
 		};
 
 		async function updateChoices(event){
-			console.log("Updating choices")
 			event.preventDefault()
 
 			let index = event.data
@@ -54,12 +55,13 @@
 
 				function appendChoice(text, onclick) {
 					let newChoice = document.createElement('a')
-					newChoice.href = '#'
-					newChoice.className = "choice"
+					newChoice.href = '#choices'
+					newChoice.classList.add("choice")
 					newChoice.innerText = text
 					newChoice.onclick = onclick
 
 					let choiceParagraph = document.createElement('p')
+					choiceParagraph.classList.add("storytext")
 					choiceParagraph.append(newChoice)
 					newChoices.push(choiceParagraph)
 				}

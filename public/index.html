@@ -15,20 +15,23 @@
 			let index = event.data
 			if(index <= currentLine) { return }
 
-			const {text, currentLine: line} = await fetch(`/update/log?line=${currentLine}`)
-				.then((response) => response.json())
+			let text, line;
+			do{
+						({text, currentLine: line} = await fetch(`/update/log?line=${currentLine}`)
+					.then((response) => response.json()))
 
-			if ( text != undefined ) {
-				let newLine = document.createElement('p')
-				newLine.id = `line ${currentLine}`
-				newLine.innerText = text.trimEnd()
+				if ( text != undefined ) {
+					let newLine = document.createElement('p')
+					newLine.id = `line ${currentLine}`
+					newLine.innerText = text.trimEnd()
 
-				newLine.classList.add("storytext")
+					newLine.classList.add("storytext")
 
-				document.getElementById("log").append(newLine)
+					document.getElementById("log").append(newLine)
 
-				currentLine += 1
-			}
+					currentLine += 1
+				}
+			} while(currentLine <= line);
 		};
 
 		async function updateChoices(event){

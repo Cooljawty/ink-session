@@ -1,5 +1,43 @@
 //Ink Story
-var Story = require('inkjs').Story;
+class Story extends require('inkjs').Story {
+	currentLine = 0;
+	constructor(file) {
+		super(file)
+
+		this.log = [];
+		this.currentLine = 0;
+	}
+
+	getLine(index){
+		if(index <= this.currentLine) {
+			return this.log[index-1]
+		} else {
+			if ( this.canContinue ) {
+				this.log.push(this.Continue())
+				this.currentLine += 1
+
+				if ( this.currentChoices.leng != 0 ){
+					clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))
+				}
+
+				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
+				return this.log[ this.log.length - 1]
+			}
+		}
+	}
+
+	makeChoice(index){
+		let choice = this.currentChoices[index]
+
+		this.ChooseChoiceIndex(index)
+
+		this.log.push(this.Continue())
+		this.currentLine += 1
+		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
+		clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))
+	}
+}
+
 
 var fs = require('fs');
 const story_path = "intercept.ink.json";
@@ -16,44 +54,6 @@ app.use(express.static('public'))
 const hostname = '127.0.0.1';
 const port = 8080;
 
-class TextLog {
-	currentLine = 0;
-	constructor() {
-		this.log = [];
-		this.currentLine = 0;
-	}
-
-	getLine(index, story){
-		if(index <= this.currentLine) {
-			return this.log[index-1]
-		} else {
-			if ( story.canContinue ) {
-				this.log.push(story.Continue())
-				this.currentLine += 1
-
-				if ( story.currentChoices.leng != 0 ){
-					clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
-				}
-
-				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
-				return this.log[ this.log.length - 1]
-			}
-		}
-	}
-
-	makeChoice(index, story){
-		let choice = story.currentChoices[index]
-
-		story.ChooseChoiceIndex(index)
-
-		this.log.push(story.Continue())
-		this.currentLine += 1
-		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
-		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
-	}
-}
-
-var textlog = new TextLog()
 
 let clients = []
 
@@ -82,9 +82,9 @@ app.get('/update/log', ( req, res) => {
 	}
 
 	console.log(`line = ${index}`)
-	console.log(`current line = ${textlog.currentLine}`)
+	console.log(`current line = ${story.currentLine}`)
 
-	let nextLine = textlog.getLine(index, story)
+	let nextLine = story.getLine(index)
 
 	console.log(nextLine, "\n")
 
@@ -93,7 +93,7 @@ app.get('/update/log', ( req, res) => {
 	res.setHeader('Content-Type', 'text/plain');
 	res.send({
 		text: nextLine,
-		currentLine: textlog.currentLine,
+		currentLine: story.currentLine,
 	});
 });
 
@@ -115,7 +115,7 @@ app.post('/choose', ( req, res) => {
 	}
 
 	console.log(`Choice ${index}`)
-	textlog.makeChoice(index, story)
+	story.makeChoice(index, story)
 
 	res.send(res.send(story.canContinue));
 });

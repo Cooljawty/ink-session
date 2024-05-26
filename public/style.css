@@ -16,7 +16,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
 	.storytext{
-		animation: fadein 0.5s
+		animation: fadein 0.75s
 	}
 }
 
@@ -27,42 +27,22 @@
 
 .storycontent{
 	display: flex;
+	flex-direction: column;
 }
 .storylog{
 	flex: 2;
+	border-bottom: 2px solid;
 }
 .storychoices{
 	position: sticky;
+	bottom: 0;
+	background: white;
+	flex: 1;
 }
 
-/* Landscape layout */
-/*
-@media screen and (min-aspect-ratio: 13/9) {
-	.storycontent{
-		flex-direction: row;
-	}
-	.storychoices{
-		top: 0;
-		align-self: flex-start;
-		flex: 1;
-	}
+hr {
+	flex-grow: 1;
+	width: 100%;
+	bottom: 0;
 }
-*/
-
-/* Portrait layout 
-@media screen and (max-aspect-ratio: 13/9) {
-*/
-	.storycontent{
-		flex-direction: column;
-	}
-	.storychoices{
-		bottom: 0;
-		background: white;
-		flex: 1;
-	}
-	hr {
-		flex-grow: 1;
-		width: 100%;
-		bottom: 0;
-	}
 

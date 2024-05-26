@@ -94,6 +94,8 @@ function appendLine(id, text) {
 	newLine.classList.add("storytext")
 
 	document.querySelector(".storylog").append(newLine)
+
+	newLine.scrollIntoView({behavior: 'smooth', block: 'center', inline: 'nearest'})
 }
 
 const updates = new EventSource(route["eventStream"])

@@ -52,14 +52,14 @@ async function updateChoices(event){
 	event.preventDefault()
 
 	let index = event.data
-	let list = await fetch(route['updateChoices'])
+	let choices = await fetch(route['updateChoices'])
 		.then((response) => response.json())
 		.then((json) => json)
 
 	if ( choices != undefined ) {
-		let choiceList = document.getElementById("choices")
+		let choiceBox = document.querySelector(".storychoices")
 		let newChoices = []
-		for ( choice of list ) {
+		for ( choice of choices ) {
 			appendChoice( choice.text, (event) => {
 				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"}).await
 			})
@@ -82,9 +82,10 @@ async function updateChoices(event){
 			newChoices.push(choiceParagraph)
 		}
 
-		choiceList.replaceChildren(...newChoices)
+		choiceBox.replaceChildren(...newChoices)
 	}
 };
+
 function appendLine(id, text) {
 	let newLine = document.createElement('p')
 	newLine.innerText = text.trimEnd()
@@ -92,7 +93,7 @@ function appendLine(id, text) {
 	newLine.id = id
 	newLine.classList.add("storytext")
 
-	document.getElementById("log").append(newLine)
+	document.querySelector(".storylog").append(newLine)
 }
 
 const updates = new EventSource(route["eventStream"])

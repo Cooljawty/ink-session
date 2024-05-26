@@ -25,3 +25,44 @@
 	to  { opacity: 1;}
 }
 
+.storycontent{
+	display: flex;
+}
+.storylog{
+	flex: 2;
+}
+.storychoices{
+	position: sticky;
+}
+
+/* Landscape layout */
+/*
+@media screen and (min-aspect-ratio: 13/9) {
+	.storycontent{
+		flex-direction: row;
+	}
+	.storychoices{
+		top: 0;
+		align-self: flex-start;
+		flex: 1;
+	}
+}
+*/
+
+/* Portrait layout 
+@media screen and (max-aspect-ratio: 13/9) {
+*/
+	.storycontent{
+		flex-direction: column;
+	}
+	.storychoices{
+		bottom: 0;
+		background: white;
+		flex: 1;
+	}
+	hr {
+		flex-grow: 1;
+		width: 100%;
+		bottom: 0;
+	}
+

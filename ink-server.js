@@ -18,7 +18,6 @@ const port = 8080;
 
 class TextLog {
 	currentLine = 0;
-
 	constructor() {
 		this.log = [];
 		this.currentLine = 0;
@@ -49,6 +48,7 @@ class TextLog {
 
 		this.log.push(story.Continue())
 		this.currentLine += 1
+		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 	}
 }
@@ -66,7 +66,7 @@ app.get('/stream', (req, res) => {
 	res.write("data: Subscribed!\n\n")
 
 	//Save connection handel
-	let clientId = 0;
+	let clientId = Date.now();
 	clients.push({id: clientId, response: res })
 
 	req.on('close', () => {
@@ -82,10 +82,12 @@ app.get('/update/log', ( req, res) => {
 	}
 
 	console.log(`line = ${index}`)
+	console.log(`current line = ${textlog.currentLine}`)
 
 	let nextLine = textlog.getLine(index, story)
 
 	console.log(nextLine, "\n")
+
 
 	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');
@@ -119,5 +121,9 @@ app.post('/choose', ( req, res) => {
 });
 
 app.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+	console.log(`Server running at http://${hostname}:${port}/`);
+	
+	setTimeout(()=>{
+		clients.forEach( client => client.response.write(`data: ping\n\n`))
+	}, 100);
 });

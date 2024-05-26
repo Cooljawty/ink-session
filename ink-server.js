@@ -54,16 +54,23 @@ var story = new Story(inkFile);
 const express = require('express')
 const app = express()
 
-app.use(express.urlencoded({extended: true}))
-app.use(express.static('public'))
-
 const hostname = '127.0.0.1';
 const port = 8080;
+const route = {
+	pages: 'public',
 
+	eventStream: '/stream',
+	updateLog: '/update/log',
+	updateChoices: '/update/choices',
+	sendChoice: '/choose',
+}
+
+app.use(express.urlencoded({extended: true}))
+app.use(express.static(route['pages']))
 
 let clients = []
 
-app.get('/stream', (req, res) => {
+app.get(route['eventStream'], (req, res) => {
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
 		'Connection': "keep-alive",
@@ -81,7 +88,7 @@ app.get('/stream', (req, res) => {
 	})
 	
 });
-app.get('/update/log', ( req, res) => {
+app.get(route['updateLog'], ( req, res) => {
 	let index = req.body['line']
 	if ( req.query != undefined ) {
 		index = req.query['line']
@@ -94,7 +101,7 @@ app.get('/update/log', ( req, res) => {
 	res.send(nextLine);
 });
 
-app.get('/update/choices', ( req, res) => {
+app.get(route['updateChoices'], ( req, res) => {
 	let choices = story.currentChoices.map( choice => {
 		return {
 			index: choice.index,
@@ -105,7 +112,7 @@ app.get('/update/choices', ( req, res) => {
 	res.send(choices);
 });
 
-app.post('/choose', ( req, res) => {
+app.post(route['sendChoice'], ( req, res) => {
 	let index = req.body['index']
 	if ( req.query != undefined ) {
 		index = req.query['index']

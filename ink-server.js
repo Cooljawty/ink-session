@@ -49,7 +49,6 @@ class TextLog {
 
 		this.log.push(story.Continue())
 		this.currentLine += 1
-		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 	}
 }

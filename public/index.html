@@ -9,29 +9,59 @@
 	</div>
 
 	<script>
-		var currentLine = 1;
+		var currentLine = 0;
 		
 		async function updateLog(event){
+			//Skip if up to date
 			let index = event.data
-			if(index <= currentLine) { return }
+			if(index != undefined && index <= currentLine) { return }
 
-			let text, line;
-			do{
-						({text, currentLine: line} = await fetch(`/update/log?line=${currentLine}`)
+			let text, line ;
+			let next = currentLine+1; 
+			do {
+				({text, currentLine: line} = await fetch(`/update/log?line=${next}`)
 					.then((response) => response.json()))
 
-				if ( text != undefined ) {
+				if ( text === undefined ) { break }
+
+
+				//Prevent line duplication
+				let id = `line${next}`
+				if ( document.querySelector(`#${id}.storytext`) === null){
 					let newLine = document.createElement('p')
-					newLine.id = `line ${currentLine}`
 					newLine.innerText = text.trimEnd()
 
+					newLine.id = id
 					newLine.classList.add("storytext")
 
 					document.getElementById("log").append(newLine)
-
-					currentLine += 1
 				}
-			} while(currentLine <= line);
+
+				currentLine = next
+				next += 1
+			} while( next <= line ) 
+		};
+
+		async function continueLog(event){
+				({text, currentLine: line} = await fetch(`/update/log?line=${currentLine+1}`)
+					.then((response) => response.json()))
+
+				if ( text === undefined ) { return }
+
+
+				//Prevent line duplication
+				let id = `line${next}`
+				if ( document.querySelector(`#${id}.storytext`) === null){
+					let newLine = document.createElement('p')
+					newLine.innerText = text.trimEnd()
+
+					newLine.id = id
+					newLine.classList.add("storytext")
+
+					document.getElementById("log").append(newLine)
+				}
+
+				currentLine += 1
 		};
 
 		async function updateChoices(event){
@@ -52,7 +82,7 @@
 				}
 
 				if ( newChoices.length === 0 ){
-					appendChoice("continue..", updateLog)
+					appendChoice("continue..", continueLog)
 				}
 
 				function appendChoice(text, onclick) {

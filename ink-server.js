@@ -111,7 +111,6 @@ app.post('/choose', ( req, res) => {
 		index = req.query['index']
 	}
 
-	console.log(`Choice ${index}`)
 	story.makeChoice(index, story)
 
 	res.send(res.send(story.canContinue));

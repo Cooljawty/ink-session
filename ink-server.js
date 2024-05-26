@@ -10,7 +10,10 @@ class Story extends require('inkjs').Story {
 
 	getLine(index){
 		if(index <= this.currentLine) {
-			return this.log[index-1]
+			return { 
+				text: this.log[index-1], 
+				currentLine: story.currentLine, 
+			}
 		} else {
 			if ( this.canContinue ) {
 				this.log.push(this.Continue())
@@ -21,7 +24,10 @@ class Story extends require('inkjs').Story {
 				}
 
 				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
-				return this.log[ this.log.length - 1]
+				return { 
+					text: this.log[ this.log.length - 1], 
+					currentLine: story.currentLine, 
+				}
 			}
 		}
 	}
@@ -81,20 +87,11 @@ app.get('/update/log', ( req, res) => {
 		index = req.query['line']
 	}
 
-	console.log(`line = ${index}`)
-	console.log(`current line = ${story.currentLine}`)
-
 	let nextLine = story.getLine(index)
-
-	console.log(nextLine, "\n")
-
 
 	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');
-	res.send({
-		text: nextLine,
-		currentLine: story.currentLine,
-	});
+	res.send(nextLine);
 });
 
 app.get('/update/choices', ( req, res) => {

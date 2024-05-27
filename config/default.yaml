@@ -1,0 +1,12 @@
+hostname: 127.0.0.1
+port: 8080
+
+story_path: "TheIntercept.ink"
+
+routes: {
+  pages: public,
+  eventStream: /stream,
+  updateLog: /update/log,
+  updateChoices: /update/choices,
+  sendChoice: /choose,
+}

@@ -1,3 +1,6 @@
+//Configuration
+const config = require('config');
+
 const fs = require('fs');
 const inkjs = require('inkjs');
 const express = require('express')
@@ -49,24 +52,13 @@ class Story extends inkjs.Story {
 }
 
 
-const story_path = "TheIntercept.ink";
-var inkFile = fs.readFileSync(story_path, {encoding: 'UTF-8'});
+var inkFile = fs.readFileSync(config.get('story_path'), {encoding: 'UTF-8'});
 var inkJson = new inkjs.Compiler(inkFile).Compile().ToJson()
-var story = new Story(inkJson);
+var story   = new Story(inkJson);
 
 //Server
 const app = express()
-
-const hostname = '127.0.0.1';
-const port = 8080;
-const route = {
-	pages: 'public',
-
-	eventStream: '/stream',
-	updateLog: '/update/log',
-	updateChoices: '/update/choices',
-	sendChoice: '/choose',
-}
+const route = config.get('routes')
 
 app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
@@ -126,6 +118,8 @@ app.post(route['sendChoice'], ( req, res) => {
 	res.send(res.send(story.canContinue));
 });
 
+const port = config.get('port')
+const hostname = config.get('hostname')
 app.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 	

@@ -1,5 +1,9 @@
+const fs = require('fs');
+const inkjs = require('inkjs');
+const express = require('express')
+
 //Ink Story
-class Story extends require('inkjs').Story {
+class Story extends inkjs.Story {
 	currentLine = 0;
 	constructor(file) {
 		super(file)
@@ -45,13 +49,12 @@ class Story extends require('inkjs').Story {
 }
 
 
-var fs = require('fs');
-const story_path = "intercept.ink.json";
-var inkFile = fs.readFileSync(story_path, 'UTF-8').replace(/^\uFEFF/, '');
-var story = new Story(inkFile);
+const story_path = "TheIntercept.ink";
+var inkFile = fs.readFileSync(story_path, {encoding: 'UTF-8'});
+var inkJson = new inkjs.Compiler(inkFile).Compile().ToJson()
+var story = new Story(inkJson);
 
 //Server
-const express = require('express')
 const app = express()
 
 const hostname = '127.0.0.1';

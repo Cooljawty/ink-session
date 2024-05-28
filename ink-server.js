@@ -58,11 +58,12 @@ var story   = new Story(inkJson);
 
 //Server
 const app = express()
-const route = config.get('routes')
+const route = config.get('routes') //TODO: create sperate routes for each session
 
 app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
 
+//TODO: Save state and exit when all clients disconnect
 let clients = []
 
 app.get(route['eventStream'], (req, res) => {
@@ -119,10 +120,11 @@ app.post(route['sendChoice'], ( req, res) => {
 });
 
 const port = config.get('port')
-const hostname = config.get('hostname')
+const hostname = config.util.getEnv('HOSTNAME')
 app.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 	
+	//TODO: Create heartbeat stream to prevent client time outs
 	setTimeout(()=>{
 		clients.forEach( client => client.response.write(`data: ping\n\n`))
 	}, 100);

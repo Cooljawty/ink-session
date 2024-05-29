@@ -1,7 +1,10 @@
-hostname: 127.0.0.1
 port: 8080
 
 story_path: "TheIntercept.ink"
+save_path: "TheIntercept.save"
+
+heartbeatInterval: 2000 #in ms
+sessionTimeout: 2000 #in ms
 
 routes: {
   pages: public,

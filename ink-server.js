@@ -55,6 +55,10 @@ class Story extends inkjs.Story {
 var inkFile = fs.readFileSync(config.get('story_path'), {encoding: 'UTF-8'});
 var inkJson = new inkjs.Compiler(inkFile).Compile().ToJson()
 var story   = new Story(inkJson);
+if ( fs.existsSync(config.get('save_path')) ) {
+	var prevState = fs.readFileSync(config.get('save_path'), {encoding: 'UTF-8'});
+	story.state.LoadJson(prevState)
+}
 
 //Server
 const app = express()
@@ -66,6 +70,14 @@ app.use(express.static(route['pages']))
 //TODO: Save state and exit when all clients disconnect
 let clients = []
 
+app.on('client disconnected', ()=>{
+	if (clients.length === 0 ) {
+		console.log("All clients disconnected")
+
+		const saveFilePath = config.get('save_path')
+		fs.writeFileSync(saveFilePath, story.state.toJson())
+	}
+})
 app.get(route['eventStream'], (req, res) => {
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
@@ -88,6 +100,8 @@ app.get(route['eventStream'], (req, res) => {
 		console.log(`${clientId} Connection closed`);
 		clearInterval(heartbeat)
 		clients = clients.filter(client => client.id !== clientId);
+
+		setTimeout(()=>{app.emit('client disconnected')}, config.get('sessionTimeout'))
 	})
 
 	

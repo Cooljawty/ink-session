@@ -1,7 +1,12 @@
 port: 8080
 
+
 story_path: "TheIntercept.ink"
-save_path: "TheIntercept.save"
+
+save_path: {
+  state: "TheIntercept.save",
+  log: "log.json",
+}
 
 heartbeatInterval: 2000 #in ms
 sessionTimeout: 2000 #in ms

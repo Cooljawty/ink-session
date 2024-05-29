@@ -56,8 +56,11 @@ var inkFile = fs.readFileSync(config.get('story_path'), {encoding: 'UTF-8'});
 var inkJson = new inkjs.Compiler(inkFile).Compile().ToJson()
 var story   = new Story(inkJson);
 if ( fs.existsSync(config.get('save_path')) ) {
-	var prevState = fs.readFileSync(config.get('save_path'), {encoding: 'UTF-8'});
+	var prevState = fs.readFileSync(config.get('save_path.state'), {encoding: 'UTF-8'});
 	story.state.LoadJson(prevState)
+
+	var prevLog = fs.readFileSync(config.get('save_path.log'), {encoding: 'UTF-8'});
+	({log: story.log, currentLine: story.currentLine} = JSON.parse(prevLog))
 }
 
 //Server
@@ -67,15 +70,19 @@ const route = config.get('routes') //TODO: create sperate routes for each sessio
 app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
 
-//TODO: Save state and exit when all clients disconnect
 let clients = []
 
 app.on('client disconnected', ()=>{
 	if (clients.length === 0 ) {
 		console.log("All clients disconnected")
 
-		const saveFilePath = config.get('save_path')
-		fs.writeFileSync(saveFilePath, story.state.toJson())
+		const stateSavePath = config.get('save_path.state')
+		const logSavePath = config.get('save_path.log')
+		fs.writeFileSync(stateSavePath, story.state.toJson())
+		fs.writeFileSync(logSavePath, JSON.stringify({
+			log: story.log,
+			currentLine: story.currentLine
+		}))
 	}
 })
 app.get(route['eventStream'], (req, res) => {

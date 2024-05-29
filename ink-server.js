@@ -77,11 +77,19 @@ app.get(route['eventStream'], (req, res) => {
 	//Save connection handel
 	let clientId = Date.now();
 	clients.push({id: clientId, response: res })
+	console.log(`Client ${clientId} connected`)
+
+	//Ping client to keep alive
+	const heartbeat = setInterval(()=>{
+		res.write(':ping\n\n');	
+	}, config.get('heartbeatInterval'))
 
 	req.on('close', () => {
 		console.log(`${clientId} Connection closed`);
+		clearInterval(heartbeat)
 		clients = clients.filter(client => client.id !== clientId);
 	})
+
 	
 });
 app.get(route['updateLog'], ( req, res) => {
@@ -124,8 +132,4 @@ const hostname = config.util.getEnv('HOSTNAME')
 app.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 	
-	//TODO: Create heartbeat stream to prevent client time outs
-	setTimeout(()=>{
-		clients.forEach( client => client.response.write(`data: ping\n\n`))
-	}, 100);
 });

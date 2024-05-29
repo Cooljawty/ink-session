@@ -49,13 +49,24 @@ class Story extends inkjs.Story {
 		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 		clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))
 	}
+
+	save(){
+		const stateSavePath = config.get('save_path.state')
+		const logSavePath = config.get('save_path.log')
+		fs.writeFileSync(stateSavePath, this.state.toJson())
+		fs.writeFileSync(logSavePath, JSON.stringify({
+			log: this.log,
+			currentLine: this.currentLine
+		}))
+	}
 }
 
 
 var inkFile = fs.readFileSync(config.get('story_path'), {encoding: 'UTF-8'});
 var inkJson = new inkjs.Compiler(inkFile).Compile().ToJson()
 var story   = new Story(inkJson);
-if ( fs.existsSync(config.get('save_path')) ) {
+if ( fs.existsSync(config.get('save_path.state')) ) {
+	console.log("Restoring save state")
 	var prevState = fs.readFileSync(config.get('save_path.state'), {encoding: 'UTF-8'});
 	story.state.LoadJson(prevState)
 
@@ -76,13 +87,9 @@ app.on('client disconnected', ()=>{
 	if (clients.length === 0 ) {
 		console.log("All clients disconnected")
 
-		const stateSavePath = config.get('save_path.state')
-		const logSavePath = config.get('save_path.log')
-		fs.writeFileSync(stateSavePath, story.state.toJson())
-		fs.writeFileSync(logSavePath, JSON.stringify({
-			log: story.log,
-			currentLine: story.currentLine
-		}))
+		story.save()
+
+		process.exit()
 	}
 })
 app.get(route['eventStream'], (req, res) => {
@@ -150,7 +157,22 @@ app.post(route['sendChoice'], ( req, res) => {
 
 const port = config.get('port')
 const hostname = config.util.getEnv('HOSTNAME')
-app.listen(port, hostname, () => {
+const server = app.listen(port, hostname, () => {
 	console.log(`Server running at http://${hostname}:${port}/`);
 	
 });
+
+process.on('SIGTERM', () => {
+  debug('SIGTERM signal received: closing HTTP server')
+  server.close(() => {
+	debug('Server closed')
+  })
+})
+
+process.on('exit', () => {
+	//story.save()
+
+	server.close(() => {
+	debug('Server closed')
+	})
+})

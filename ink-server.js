@@ -1,9 +1,9 @@
 //Configuration
-const config = require('config');
-
+const config = require('config')
 const fs = require('fs');
 const inkjs = require('inkjs');
-const express = require('express')
+console.log(import('inkjs') )
+const express = require('express');
 
 //Ink Story
 class Story extends inkjs.Story {

@@ -4,6 +4,6 @@
     "config": "^3.3.11",
     "express": "^4.19.2",
     "http": "^0.0.1-security",
-    "inkjs": "^2.2.3"
+    "inkjs": "2.2.3"
   }
 }

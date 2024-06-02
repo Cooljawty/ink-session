@@ -129,7 +129,7 @@ app.get(route['updateLog'], ( req, res) => {
 
 	res.statusCode = nextLine === undefined ? 204 : 200;
 	res.setHeader('Content-Type', 'text/plain');
-	res.setHeader('Cache-Control', 'max-age=0');
+	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 	res.send(nextLine);
 });
 
@@ -142,7 +142,7 @@ app.get(route['updateChoices'], ( req, res) => {
 		}
 	})
 
-	res.setHeader('Cache-Control', 'max-age=0');
+	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 	res.send(choices);
 });
 
@@ -154,7 +154,7 @@ app.post(route['sendChoice'], ( req, res) => {
 
 	story.makeChoice(index, story)
 
-	res.setHeader('Cache-Control', 'max-age=0');
+	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 	res.send(res.send(story.canContinue));
 });
 

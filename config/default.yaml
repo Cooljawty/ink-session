@@ -15,5 +15,6 @@ routes: {
   eventStream: /stream,
   updateLog: /update/log,
   updateChoices: /update/choices,
+  getMetadata: /metadata,
   sendChoice: /choose,
 }

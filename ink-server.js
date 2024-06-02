@@ -158,6 +158,12 @@ app.post(route['sendChoice'], ( req, res) => {
 	res.send(res.send(story.canContinue));
 });
 
+app.get(route['getMetadata'], (req, res) => {
+	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
+	res.send(story.globalTags);
+});
+
+
 const port = config.get('port')
 const hostname = config.util.getEnv('HOSTNAME')
 const server = app.listen(port, hostname, () => {

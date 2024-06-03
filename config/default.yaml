@@ -1,6 +1,5 @@
 port: 8080
 
-
 story_path: "TheIntercept.ink"
 save_path: {
   state: "TheIntercept.save",

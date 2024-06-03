@@ -1,19 +1,45 @@
+body {
+	margin-left: 1rem;
+
+	line-height: 1.2vh;
+	font-size: 2.5vh;
+}
+
+/* Formatting header */
+header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+}
+
+#title {
+	flex: 1 fit-content;
+	flex-grow: 0;
+	margin-right: 0.5em;
+}
+#author {
+	flex: 1 auto;
+}
+
+/* Manage story content */
 .storytext {
 	color: black;
-	line-height: 1.7em;
-	font-size: 13pt;
+	line-height: 1.2em;
+	font-size: 2.5vh;
 }
 
 .choice{
-	margin-left: 1rem;
-}
-.choice:visited{
-	color: black;
-}
-.choice:hover{
+	margin-left: 0.5em;
 	color: grey;
 }
+.choice:visited{
+	color: grey;
+}
+.choice:hover{
+	color: black;
+}
 
+/* Animate line appearing */
 @media (prefers-reduced-motion: no-preference) {
 	.storytext{
 		animation: fadein 0.75s
@@ -25,6 +51,8 @@
 	to  { opacity: 1;}
 }
 
+/* Have Choices stick to bottom */
+/*
 .storycontent{
 	display: flex;
 	flex-direction: column;
@@ -39,10 +67,4 @@
 	background: white;
 	flex: 1;
 }
-
-hr {
-	flex-grow: 1;
-	width: 100%;
-	bottom: 0;
-}
-
+*/

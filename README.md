@@ -1,6 +1,6 @@
-# Ink Server
+# Ink Session
 
-Ink Server is a webserver that provides a runtime for the [ink](https://github.com/inkle/ink/) 
+Ink Session is a webserver that provides a runtime for the [ink](https://github.com/inkle/ink/) 
 language accessable by a http interface.
 
 It is mostly based off of [inkjs](https://github.com/y-lohse/inkjs/) 
@@ -30,7 +30,7 @@ Changing the `routes` will reqire the updating client's route table as well.
 
 Then you can run the server with the command:
 
-`node ink-server.js`
+`node ink-session.js`
 
 It will then print the URL used to access the server.
 Going to that link will load the example page in the `public` directory.

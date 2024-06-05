@@ -12,6 +12,15 @@ class Story extends inkjs.Story {
 
 		this.log = [];
 		this.currentLine = 0;
+
+	}
+
+	updateTurn() {
+		let tag = this.currentTags
+			?.find(tag => tag.startsWith("turn"))
+			?.match(/^turn: (?<player>.+)/).groups.player
+
+		this.turn = tag ? tag : this.turn
 	}
 
 	getLine(index){
@@ -24,6 +33,9 @@ class Story extends inkjs.Story {
 			if ( this.canContinue ) {
 				this.log.push(this.Continue())
 				this.currentLine += 1
+
+				this.updateTurn()
+				console.log(`${this.turn}'s turn`)
 
 				if ( this.currentChoices.leng != 0 ){
 					clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))

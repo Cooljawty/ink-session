@@ -80,7 +80,7 @@ const route = config.get('routes') //TODO: create sperate routes for each sessio
 app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
 
-let clients = []
+let clients = new Map
 
 app.on('client disconnected', ()=>{
 	if (clients.length === 0 ) {
@@ -92,29 +92,39 @@ app.on('client disconnected', ()=>{
 	}
 })
 app.get(route['eventStream'], (req, res) => {
+
+	//Set id from cookie, or set a new one
+	let cookieId = req.get('Cookie')?.split(";")
+		.find(item => item.startsWith('clientId'))
+		?.split('=')[1]
+	let clientId = cookieId ? cookieId : Date.now();
+	if (!cookieId) {
+		while(clients.get(clientId)) { clientId += 1 } //Iterate until unique id found
+	}
+
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
 		'Connection': "keep-alive",
+		'Set-Cookie': `clientId=${clientId}; SameSite=Strict`,
 	})
-
 	res.write("data: Subscribed!\n\n")
 
-	//Save connection handel
-	let clientId = Date.now();
-	clients.push({id: clientId, response: res })
+	clients.set(clientId, {response: res})
 	console.log(`Client ${clientId} connected`)
 
-	//Ping client to keep alive
 	const heartbeat = setInterval(()=>{
 		res.write(':ping\n\n');	
 	}, config.get('heartbeatInterval'))
 
 	req.on('close', () => {
-		console.log(`${clientId} Connection closed`);
+		console.log(`${clientId} Connection closed`)
 		clearInterval(heartbeat)
-		clients = clients.filter(client => client.id !== clientId);
+		clients.delete(clientId)
 
-		setTimeout(()=>{app.emit('client disconnected')}, config.get('sessionTimeout'))
+		setTimeout(
+			function(){ app.emit('client disconnected') }, 
+			config.get('sessionTimeout')
+		)
 	})
 
 	

@@ -25,17 +25,7 @@ app.use(express.static(route['pages']))
 
 let clients = new Map;
 
-app.on('client disconnected', ()=>{
-	if (clients.length === 0 ) {
-		console.log("All clients disconnected")
-
-		story.save()
-
-		process.exit()
-	}
-})
-app.get(route['eventStream'], (req, res) => {
-
+app.get(route['eventStream'], (req, res, next)=>{
 	//Set id from cookie, or set a new one
 	let cookieId = req.get('Cookie')?.split(";")
 		.find(item => item.startsWith('clientId'))
@@ -52,7 +42,7 @@ app.get(route['eventStream'], (req, res) => {
 	})
 	res.write("data: Subscribed!\n\n")
 
-	clients.set(clientId, {response: res, tags})
+	clients.set(clientId, {response: res})
 	console.log(`Client ${clientId} connected`)
 
 	const heartbeat = setInterval(()=>{
@@ -70,46 +60,32 @@ app.get(route['eventStream'], (req, res) => {
 		)
 	})
 
-	
+	next()
 });
-app.get(route['updateLog'], ( req, res) => {
-	let index = req.body['line']
-	if ( req.query != undefined ) {
-		index = req.query['line']
+app.on('client disconnected', ()=>{
+	if (clients.length === 0 ) {
+		console.log("All clients disconnected")
+
+		story.save()
+
+		process.exit()
 	}
+})
 
-	let nextLine = story.getLine(index)
-
-	res.statusCode = nextLine === undefined ? 204 : 200;
-	res.setHeader('Content-Type', 'text/plain');
-	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-	res.send(nextLine);
-});
-
-app.get(route['updateChoices'], ( req, res) => {
-	let choices = story.currentChoices.map( choice => {
-		return {
-			index: choice.index,
-			text: choice.text,
-			tags: choice.tags,
-		}
-	})
-
-	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-	res.send(choices);
-});
-
-app.post(route['sendChoice'], ( req, res) => {
-	let index = req.body['index']
-	if ( req.query != undefined ) {
-		index = req.query['index']
+app.get(route['updateLog'], story.updateLog, (req, res, next)=>{
+	if ( story.currentChoices.leng != 0 ){
+		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 	}
-
-	story.makeChoice(index, story)
-
-	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-	res.send(res.send(story.canContinue));
+	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
 });
+
+app.get(route['updateChoices'], story.updateChoices);
+
+app.post(route['sendChoice'], story.selectChoice, (req, res, next)=>{
+	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
+	clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
+});
+
 
 app.get(route['getMetadata'], (req, res) => {
 	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');

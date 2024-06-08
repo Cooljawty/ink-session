@@ -13,10 +13,13 @@ class Story extends inkjs.Story {
 
 		this.variablesState["cast"].all.forEach((value, key, map) => {
 			this.variablesState["cast"].set(key, Date.now())
-			console.log(this.variablesState["cast"])
+			//console.log(this.variablesState["cast"])
 		})
-		console.log("Cast", this.variablesState["cast"].all)
-
+		//console.log("Cast", this.variablesState["cast"].all)
+		
+		this.updateLog = this.updateLog.bind(this);
+		this.updateChoices = this.updateChoices.bind(this);
+		this.selectChoice = this.selectChoice.bind(this);
 	}
 
 	updateTurn() {
@@ -31,7 +34,7 @@ class Story extends inkjs.Story {
 		if(index <= this.currentLine) {
 			return { 
 				text: this.log[index-1], 
-				currentLine: story.currentLine, 
+				currentLine: this.currentLine, 
 			}
 		} else {
 			if ( this.canContinue ) {
@@ -41,14 +44,9 @@ class Story extends inkjs.Story {
 				this.updateTurn()
 				console.log(`${this.turn}'s turn`)
 
-				if ( this.currentChoices.leng != 0 ){
-					clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))
-				}
-
-				clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
 				return { 
 					text: this.log[ this.log.length - 1], 
-					currentLine: story.currentLine, 
+					currentLine: this.currentLine, 
 				}
 			}
 		}
@@ -61,8 +59,6 @@ class Story extends inkjs.Story {
 
 		this.log.push(this.Continue())
 		this.currentLine += 1
-		clients.forEach( client => client.response.write(`event: New content\ndata:${this.currentLine}\n\n`))
-		clients.forEach( client => client.response.write(`event: New choices\ndata:${this.currentChoices.length}\n\n`))
 	}
 
 	save(){
@@ -74,6 +70,53 @@ class Story extends inkjs.Story {
 			currentLine: this.currentLine
 		}))
 	}
+
+	//Middleware methods
+	updateLog(req, res, next){
+		let index = req.body['line']
+		if ( req.query != undefined ) {
+			index = req.query['line']
+		}
+
+		let nextLine = this.getLine(index)
+
+		res.statusCode = nextLine === undefined ? 204 : 200;
+		res.setHeader('Content-Type', 'text/plain');
+		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
+		res.send(nextLine);
+
+		next()
+	}
+
+	updateChoices(req, res, next){
+		let choices = this.currentChoices.map( choice => {
+			return {
+				index: choice.index,
+				text: choice.text,
+				tags: choice.tags,
+			}
+		})
+
+		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
+		res.send(choices);
+
+		next()
+	}
+
+	selectChoice(req, res, next){
+		let index = req.body['index']
+		if ( req.query != undefined ) {
+			index = req.query['index']
+		}
+
+		this.makeChoice(index, index)
+
+		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
+		res.send(this.canContinue);
+
+		next()
+	}
+
 }
 
 module.exports = {

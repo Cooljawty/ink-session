@@ -58,7 +58,7 @@ async function continueLog(event){
 
 
 		//Prevent line duplication
-		let id = `line${next}`
+		let id = `line${currentLine+1}`
 		if ( document.querySelector(`#${id}.storytext`) === null){
 			appendLine(id, text)
 		}

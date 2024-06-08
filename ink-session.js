@@ -25,7 +25,7 @@ app.use(express.static(route['pages']))
 
 let clients = new Map;
 
-app.get(route['eventStream'], (req, res, next)=>{
+function subscribe(req, res, next){
 	//Set id from cookie, or set a new one
 	let cookieId = req.get('Cookie')?.split(";")
 		.find(item => item.startsWith('clientId'))
@@ -61,7 +61,8 @@ app.get(route['eventStream'], (req, res, next)=>{
 	})
 
 	next()
-});
+}
+app.get(route['eventStream'], subscribe);
 app.on('client disconnected', ()=>{
 	if (clients.length === 0 ) {
 		console.log("All clients disconnected")

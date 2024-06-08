@@ -80,6 +80,7 @@ async function updateChoices(event){
 		for ( choice of choices ) {
 			appendChoice( choice.text, (event) => {
 				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"}).await
+				continueLog().await
 			})
 		}
 

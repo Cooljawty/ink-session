@@ -24,7 +24,6 @@ app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
 
 let clients = new Map;
-let names = ['Alice', 'Bob']
 
 function parseCookie(req, key){
 	return req.get('Cookie')?.split(";")
@@ -39,7 +38,9 @@ function subscribe(req, res, next){
 		while(clients.get(clientId)) { clientId += 1 } //Iterate until unique id found
 	}
 
-	let clientName = names.pop();
+	let clientName = story.castClient(clientId);
+	clients.set(clientId, {response: res, name: clientName})
+	console.log(`Client ${clientId} connected`)
 
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
@@ -49,9 +50,6 @@ function subscribe(req, res, next){
 	})
 	res.write("data: Subscribed!\n\n")
 
-	clients.set(clientId, {response: res, name: clientName})
-	console.log(`Client ${clientId} connected`)
-
 	const heartbeat = setInterval(()=>{
 		res.write(':ping\n\n');	
 	}, config.get('heartbeatInterval'))
@@ -60,7 +58,6 @@ function subscribe(req, res, next){
 		console.log(`${clientId} Connection closed`)
 		clearInterval(heartbeat)
 
-		names.push(clients.get(clientId).name)
 		clients.delete(clientId)
 
 		setTimeout(

@@ -11,17 +11,33 @@ class Story extends inkjs.Story {
 		this.log = [];
 		this.currentLine = 0;
 
-		/*
+		this.cast = new Map();
 		this.variablesState["cast"].all.forEach((value, key, map) => {
-			this.variablesState["cast"].set(key, Date.now())
-			console.log(this.variablesState["cast"])
+			this.cast.set(JSON.parse(key).itemName, null)
 		})
-		console.log("Cast", this.variablesState["cast"].all)
-		*/
 		
 		this.updateLog = this.updateLog.bind(this);
 		this.updateChoices = this.updateChoices.bind(this);
 		this.selectChoice = this.selectChoice.bind(this);
+	}
+
+	castClient(client){
+		for (var [name, id] of this.cast.entries()){
+			if (id == client){
+				console.log(client, "recasted as", name)
+				return name
+			}
+		}
+
+		for (var [name, id] of this.cast.entries()){
+			if (id == null){
+				console.log(client, "casted as", name)
+				this.cast.set(name, client)
+				return name
+			}
+		}
+
+		return null
 	}
 
 	updateTurn() {

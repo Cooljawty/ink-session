@@ -35,4 +35,32 @@ Then you can run the server with the command:
 It will then print the URL used to access the server.
 Going to that link will load the example page in the `public` directory.
 
+## Turns
 
+Implements methods to handle turn, so that all clients to just share control at the same time.
+
+The turn is defined in the ink file itself, with a tag with the format: 
+`turn: name` 
+Where `name` indicates who can make a choice selection.
+
+Each client is assigned a name from a global cast variable, named cast, which is a ink list type with the name of each cast member.
+
+The name for the turn tag and cast variable can be set in the config file.
+
+### Example
+```
+LIST cast = Alice, Bob
+Enter Alice and Bob
+
+# turn: Alice
+Alice had a pair of <>
+* red
+* blue
+- <> boots.
+
+# turn: Bob
+And Bob had a <>
+* small
+* big
+- <> hat.
+```

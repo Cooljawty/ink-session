@@ -24,6 +24,7 @@ app.use(express.urlencoded({extended: true}))
 app.use(express.static(route['pages']))
 
 let clients = new Map;
+let names = ['Alice', 'Bob']
 
 function parseCookie(req, key){
 	return req.get('Cookie')?.split(";")
@@ -38,14 +39,17 @@ function subscribe(req, res, next){
 		while(clients.get(clientId)) { clientId += 1 } //Iterate until unique id found
 	}
 
+	let clientName = names.pop();
+
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
 		'Connection': "keep-alive",
 		'Set-Cookie': `clientId=${clientId}; SameSite=Strict`,
+		'Set-cookie': `name=${clientName}; SameSite=Strict`,
 	})
 	res.write("data: Subscribed!\n\n")
 
-	clients.set(clientId, {response: res})
+	clients.set(clientId, {response: res, name: clientName})
 	console.log(`Client ${clientId} connected`)
 
 	const heartbeat = setInterval(()=>{
@@ -55,6 +59,8 @@ function subscribe(req, res, next){
 	req.on('close', () => {
 		console.log(`${clientId} Connection closed`)
 		clearInterval(heartbeat)
+
+		names.push(clients.get(clientId).name)
 		clients.delete(clientId)
 
 		setTimeout(
@@ -83,8 +89,15 @@ app.get(route['updateLog'], story.updateLog, (req, res, next)=>{
 	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
 });
 
-app.get(route['updateChoices'], story.updateChoices);
-app.post(route['sendChoice'], story.selectChoice, (req, res, next)=>{
+function appendClientName(req, res, next) {
+		let clientId = parseCookie(req, 'clientId');
+		res.locals.clientName = clients.get(clientId)?.['name'];
+		next()
+}
+
+app.get(route['updateChoices'], appendClientName, story.updateChoices);
+
+app.post(route['sendChoice'], appendClientName, story.selectChoice, (req, res, next)=> {
 	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
 	clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 });

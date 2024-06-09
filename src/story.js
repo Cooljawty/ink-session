@@ -11,11 +11,13 @@ class Story extends inkjs.Story {
 		this.log = [];
 		this.currentLine = 0;
 
+		/*
 		this.variablesState["cast"].all.forEach((value, key, map) => {
 			this.variablesState["cast"].set(key, Date.now())
-			//console.log(this.variablesState["cast"])
+			console.log(this.variablesState["cast"])
 		})
-		//console.log("Cast", this.variablesState["cast"].all)
+		console.log("Cast", this.variablesState["cast"].all)
+		*/
 		
 		this.updateLog = this.updateLog.bind(this);
 		this.updateChoices = this.updateChoices.bind(this);
@@ -28,6 +30,8 @@ class Story extends inkjs.Story {
 			?.match(/^turn: (?<player>.+)/).groups.player
 
 		this.turn = tag ? tag : this.turn
+
+		console.log(`${this.turn}'s turn`)
 	}
 
 	getLine(index){
@@ -42,7 +46,6 @@ class Story extends inkjs.Story {
 				this.currentLine += 1
 
 				this.updateTurn()
-				console.log(`${this.turn}'s turn`)
 
 				return { 
 					text: this.log[ this.log.length - 1], 
@@ -89,7 +92,7 @@ class Story extends inkjs.Story {
 	}
 
 	updateChoices(req, res, next){
-		let choices = this.currentChoices.map( choice => {
+		let choices = this.turn != res.locals.clientName ? [] : this.currentChoices.map( choice => {
 			return {
 				index: choice.index,
 				text: choice.text,
@@ -109,7 +112,9 @@ class Story extends inkjs.Story {
 			index = req.query['index']
 		}
 
-		this.makeChoice(index, index)
+		if (this.turn == res.locals.clientName) { 
+			this.makeChoice(index, index) 
+		}
 
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		res.send(this.canContinue);

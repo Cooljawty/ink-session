@@ -25,11 +25,14 @@ app.use(express.static(route['pages']))
 
 let clients = new Map;
 
-function subscribe(req, res, next){
-	//Set id from cookie, or set a new one
-	let cookieId = req.get('Cookie')?.split(";")
-		.find(item => item.startsWith('clientId'))
+function parseCookie(req, key){
+	return req.get('Cookie')?.split(";")
+		.find(item => item.startsWith(key))
 		?.split('=')[1]
+}
+
+function subscribe(req, res, next){
+	let cookieId = parseCookie(req, 'clientId');
 	let clientId = cookieId ? cookieId : Date.now();
 	if (!cookieId) {
 		while(clients.get(clientId)) { clientId += 1 } //Iterate until unique id found
@@ -81,7 +84,6 @@ app.get(route['updateLog'], story.updateLog, (req, res, next)=>{
 });
 
 app.get(route['updateChoices'], story.updateChoices);
-
 app.post(route['sendChoice'], story.selectChoice, (req, res, next)=>{
 	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
 	clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))

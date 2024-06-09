@@ -1,3 +1,4 @@
+const config = require('config')
 const inkjs = require('inkjs');
 
 //Ink Story
@@ -12,7 +13,8 @@ class Story extends inkjs.Story {
 		this.currentLine = 0;
 
 		this.cast = new Map();
-		this.variablesState["cast"].all.forEach((value, key, map) => {
+		this.variablesState[config.get('ink_variables.cast')]
+			.all.forEach((value, key, map) => {
 			this.cast.set(JSON.parse(key).itemName, null)
 		})
 		
@@ -41,9 +43,11 @@ class Story extends inkjs.Story {
 	}
 
 	updateTurn() {
+		const turnTag = config.get('ink_variables.turn');
+		let pattern = new RegExp(`^${turnTag}: (?<player>.+)`);
 		let tag = this.currentTags
-			?.find(tag => tag.startsWith("turn"))
-			?.match(/^turn: (?<player>.+)/).groups.player
+			?.find(tag => tag.startsWith(turnTag))
+			?.match(pattern).groups.player
 
 		this.turn = tag ? tag : this.turn
 

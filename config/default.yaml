@@ -6,6 +6,11 @@ save_path: {
   log: "log.json",
 }
 
+ink_variables: {
+  cast: "cast", #List contianing all roles in turn order
+  turn: "turn", #Tag that tracks turn order
+}
+
 heartbeatInterval: 2000 #in ms
 sessionTimeout: 60000 #in ms
 

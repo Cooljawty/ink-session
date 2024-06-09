@@ -77,7 +77,7 @@ async function updateChoices(event){
 	if ( choices != undefined ) {
 		let choiceBox = document.querySelector(".storychoices")
 		let newChoices = []
-		for ( choice of choices ) {
+		for (const choice of choices ) {
 			appendChoice( choice.text, (event) => {
 				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"}).await
 				continueLog().await

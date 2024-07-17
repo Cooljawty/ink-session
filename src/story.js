@@ -120,6 +120,7 @@ class Story extends inkjs.Story {
 			}
 		})
 
+		res.statusCode = this.currentChoices.length === 0 ? 204 : 200;
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		res.send(choices);
 

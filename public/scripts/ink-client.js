@@ -37,24 +37,25 @@ async function updateLog(event){
 	let index = event.data
 	if(index != undefined && index <= currentLine) { return }
 
-	let text, line ;
-	let next = currentLine+1; 
+	let text, line;
+	let nextLine = currentLine+1; 
 	do {
-		({text, currentLine: line} = await fetch(`${route['updateLog']}?line=${next}`)
+		({text, currentLine: line} = await fetch(`${route['updateLog']}?line=${nextLine}`)
 			.then((response) => response.json()))
 
 		if ( text != undefined ) {
+			currentLine = nextLine
+			nextLine += 1
+
 			//Prevent line duplication
-			let id = `line${next}`
+			let id = `line${currentLine}`
 			if ( document.querySelector(`#${id}.storytext`) === null){
 				appendLine(id, text)
 			}
 
-			currentLine = next
-			next += 1
 		}
 
-	} while( next <= line ) 
+	} while( nextLine <= line ) 
 
 	updateChoices(event)
 };
@@ -77,24 +78,30 @@ async function continueLog(event){
 };
 
 async function updateChoices(event){
-	//event.preventDefault()
-
 	let choices = await fetch(route['updateChoices'])
-		.then((response) => response.json())
-		.then((json) => json)
+		.then((response) => response)
 
-	if ( choices != undefined ) {
+	if ( choices.ok ) {
 		let choiceBox = document.querySelector(".storychoices")
-		let newChoices = []
-		for (const choice of choices ) {
-			appendChoice( choice.text, (event) => {
+
+		const waitingForClient = choices.status === 204;
+		choices = await choices.json()
+			.then((json) => json)
+			.catch(error => {
+				if(!waitingForClient){ console.error(error) }
+				return []
+			})
+
+		let newChoices = choices.map(choice => appendChoice( choice.text, function(event) {
 				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"}).await
 				continueLog().await
 			})
-		}
+		);
 
 		if ( newChoices.length === 0 ){
-			appendChoice("continue..", continueLog)
+			if(waitingForClient) {
+				newChoices.push(appendChoice("continue..", continueLog))
+			}
 			updates.addEventListener('New content', updateLog, {once: true})
 			updates.addEventListener('New content', updateChoices, {once: true})
 		}
@@ -109,7 +116,8 @@ async function updateChoices(event){
 			let choiceParagraph = document.createElement('p')
 			choiceParagraph.classList.add("storytext")
 			choiceParagraph.append(newChoice)
-			newChoices.push(choiceParagraph)
+			
+			return choiceParagraph
 		}
 
 		choiceBox.replaceChildren(...newChoices)

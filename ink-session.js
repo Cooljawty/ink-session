@@ -45,8 +45,10 @@ function subscribe(req, res, next){
 	res.writeHead(200, {
 		'Content-Type': "text/event-stream",
 		'Connection': "keep-alive",
-		'Set-Cookie': `clientId=${clientId}; SameSite=Strict`,
-		'Set-cookie': `name=${clientName}; SameSite=Strict`,
+		'Set-Cookie': [
+			`clientId=${clientId}; SameSite=Strict`,
+			`name=${clientName}; SameSite=Strict`, 
+		],
 	})
 	res.write("data: Subscribed!\n\n")
 
@@ -80,9 +82,6 @@ app.on('client disconnected', ()=>{
 })
 
 app.get(route['updateLog'], story.updateLog, (req, res, next)=>{
-	if ( story.currentChoices.leng != 0 ){
-		clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
-	}
 	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
 });
 
@@ -96,7 +95,6 @@ app.get(route['updateChoices'], appendClientName, story.updateChoices);
 
 app.post(route['sendChoice'], appendClientName, story.selectChoice, (req, res, next)=> {
 	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
-	clients.forEach( client => client.response.write(`event: New choices\ndata:${story.currentChoices.length}\n\n`))
 });
 
 

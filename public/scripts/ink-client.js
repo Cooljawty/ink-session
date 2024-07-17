@@ -36,40 +36,42 @@ async function updateLog(event){
 		({text, currentLine: line} = await fetch(`${route['updateLog']}?line=${next}`)
 			.then((response) => response.json()))
 
-		if ( text === undefined ) { break }
+		if ( text != undefined ) {
+			//Prevent line duplication
+			let id = `line${next}`
+			if ( document.querySelector(`#${id}.storytext`) === null){
+				appendLine(id, text)
+			}
 
-
-		//Prevent line duplication
-		let id = `line${next}`
-		if ( document.querySelector(`#${id}.storytext`) === null){
-			appendLine(id, text)
+			currentLine = next
+			next += 1
 		}
 
-		currentLine = next
-		next += 1
 	} while( next <= line ) 
+
+	updateChoices(event)
 };
 
 async function continueLog(event){
 		({text, currentLine: line} = await fetch(`${route['updateLog']}?line=${currentLine+1}`)
 			.then((response) => response.json()))
 
-		if ( text === undefined ) { return }
+		if ( text != undefined ) {
+			currentLine += 1
+			
+			//Prevent line duplication
+			let id = `line${currentLine}`
+			if ( document.querySelector(`#${id}.storytext`) === null){
+				appendLine(id, text)
+			}
 
-
-		//Prevent line duplication
-		let id = `line${currentLine+1}`
-		if ( document.querySelector(`#${id}.storytext`) === null){
-			appendLine(id, text)
+			updateChoices(event)
 		}
-
-		currentLine += 1
 };
 
 async function updateChoices(event){
-	event.preventDefault()
+	//event.preventDefault()
 
-	let index = event.data
 	let choices = await fetch(route['updateChoices'])
 		.then((response) => response.json())
 		.then((json) => json)
@@ -86,6 +88,8 @@ async function updateChoices(event){
 
 		if ( newChoices.length === 0 ){
 			appendChoice("continue..", continueLog)
+			updates.addEventListener('New content', updateLog, {once: true})
+			updates.addEventListener('New content', updateChoices, {once: true})
 		}
 
 		function appendChoice(text, onclick) {
@@ -118,9 +122,6 @@ function appendLine(id, text) {
 }
 
 const updates = new EventSource(route["eventStream"])
-updates.addEventListener('New content', updateLog)
-updates.addEventListener('New content', updateChoices)
-updates.addEventListener('New choices', updateChoices)
 
 window.addEventListener('load', updateLog)
 window.addEventListener('load', updateChoices)

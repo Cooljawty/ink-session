@@ -1,5 +1,3 @@
-var currentLine = 0;
-
 const route = {
 	eventStream: '/stream',
 	updateLog: '/update/log',
@@ -7,6 +5,13 @@ const route = {
 	getMetadata: '/metadata',
 	sendChoice: '/choose',
 }
+
+const updates = new EventSource(route["eventStream"])
+
+var currentLine = 0;
+window.addEventListener('load', updateLog)
+window.addEventListener('load', updateChoices)
+getMetadata();
 
 async function getMetadata(){
 	let metadata = await fetch(route['getMetadata'])
@@ -18,11 +23,13 @@ async function getMetadata(){
 			let [_, key, value] = pair.match(pattern)
 			map[key] = value
 			return map
-		}, {})
+		},{})
 	})
 
 	document.getElementById('title').innerText = metadata['title']
-	document.getElementById('author').innerText = `by ${metadata['author']}`
+	if(metadata['author']){
+		document.getElementById('author').innerText = `by ${metadata['author']}`
+	}
 }
 
 async function updateLog(event){
@@ -120,10 +127,3 @@ function appendLine(id, text) {
 
 	newLine.scrollIntoView({behavior: 'smooth', block: 'center', inline: 'nearest'})
 }
-
-const updates = new EventSource(route["eventStream"])
-
-window.addEventListener('load', updateLog)
-window.addEventListener('load', updateChoices)
-
-getMetadata();

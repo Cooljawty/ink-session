@@ -83,18 +83,20 @@ async function updateChoices(event){
 				return []
 			})
 
-		let newChoices = choices.map(choice => appendChoice( choice.text, function(event) {
-				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"}).await
-				continueLog().await
+		let newChoices = choices.map(choice => appendChoice( choice.text, 
+			function(event) {
+				fetch(`${route['sendChoice']}?index=${choice.index}`, {method: "post"})
+				continueLog()
 			})
 		);
 
 		if ( newChoices.length === 0 ){
-			if(waitingForClient) {
-				newChoices.push(appendChoice("continue..", continueLog))
-			}
 			updates.addEventListener('New content', updateLog, {once: true})
 			updates.addEventListener('New content', updateChoices, {once: true})
+
+			if( waitingForClient ){ 
+				newChoices.push(appendChoice("continue..", continueLog)) 
+			}
 		}
 
 		function appendChoice(text, onclick) {
@@ -116,8 +118,11 @@ async function updateChoices(event){
 };
 
 function appendLine(id, text) {
-	let newLine = document.createElement('p')
-	newLine.innerText = text.trimEnd()
+	let newLine = document.createElement('span')
+	newLine.innerText = text//.trimEnd()
+	if( !newLine.querySelector('br') ){
+		newLine.innerText += ' ';
+	}
 
 	newLine.id = id
 	newLine.classList.add("storytext")

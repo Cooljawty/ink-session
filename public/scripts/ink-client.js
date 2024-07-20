@@ -16,15 +16,6 @@ getMetadata();
 async function getMetadata(){
 	let metadata = await fetch(route['getMetadata'])
 		.then(res => res.json())
-		.then(res => {
-
-		const pattern = /^(\w+): (.+)/
-		return res.reduce((map, pair) => {
-			let [_, key, value] = pair.match(pattern)
-			map[key] = value
-			return map
-		},{})
-	})
 
 	document.getElementById('title').innerText = metadata['title']
 	if(metadata['author']){

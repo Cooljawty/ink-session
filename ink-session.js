@@ -100,7 +100,13 @@ app.post(route['sendChoice'], appendClientName, story.selectChoice, (req, res, n
 
 app.get(route['getMetadata'], (req, res) => {
 	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-	res.send(story.globalTags);
+	const pattern = /^(\w+): (.+)/
+	let metadata = story.globalTags.reduce((map, pair) => {
+		let [_, key, value] = pair.match(pattern)
+		map[key] = value
+		return map
+	},{})
+	res.send(metadata);
 });
 
 

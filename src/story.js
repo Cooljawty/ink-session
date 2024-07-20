@@ -1,5 +1,6 @@
 const config = require('config')
 const inkjs = require('inkjs');
+const fs = require('fs');
 
 //Ink Story
 class Story extends inkjs.Story {
@@ -18,9 +19,25 @@ class Story extends inkjs.Story {
 			this.cast.set(JSON.parse(key).itemName, null)
 		})
 		
+		this.getMetadata = this.getMetadata.bind(this);
 		this.updateLog = this.updateLog.bind(this);
 		this.updateChoices = this.updateChoices.bind(this);
 		this.selectChoice = this.selectChoice.bind(this);
+	}
+
+	static load(path){
+		var inkFile = fs.readFileSync(path, {encoding: 'UTF-8'});
+		var story   = new Story(inkFile);
+		if ( fs.existsSync(config.get('save_path.state')) ) {
+			console.log("Restoring save state")
+			var prevState = fs.readFileSync(config.get('save_path.state'), {encoding: 'UTF-8'});
+			story.state.LoadJson(prevState)
+
+			var prevLog = fs.readFileSync(config.get('save_path.log'), {encoding: 'UTF-8'});
+			({log: story.log, currentLine: story.currentLine} = JSON.parse(prevLog))
+		}
+
+		return story
 	}
 
 	castClient(client){
@@ -95,6 +112,19 @@ class Story extends inkjs.Story {
 	}
 
 	//Middleware methods
+	getMetadata(req, res, next){
+		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
+		const pattern = /^(\w+): (.+)/
+		let metadata = this.globalTags.reduce((map, pair) => {
+			let [_, key, value] = pair.match(pattern)
+			map[key] = value
+			return map
+		},{})
+		res.send(metadata);
+
+		//next()
+	}
+
 	updateLog(req, res, next){
 		let index = req.body['line']
 		if ( req.query != undefined ) {

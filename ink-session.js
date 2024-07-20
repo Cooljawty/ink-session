@@ -1,29 +1,10 @@
 //Configuration
 const config = require('config')
-const fs = require('fs');
 const express = require('express');
 
 const Story = require("./src/story").Story;
 
-var inkFile = fs.readFileSync(config.get('story_path'), {encoding: 'UTF-8'});
-var story   = new Story(inkFile);
-if ( fs.existsSync(config.get('save_path.state')) ) {
-	console.log("Restoring save state")
-	var prevState = fs.readFileSync(config.get('save_path.state'), {encoding: 'UTF-8'});
-	story.state.LoadJson(prevState)
-
-	var prevLog = fs.readFileSync(config.get('save_path.log'), {encoding: 'UTF-8'});
-	({log: story.log, currentLine: story.currentLine} = JSON.parse(prevLog))
-}
-
-//Server
-const app = express()
-const route = config.get('routes') //TODO: create sperate routes for each session
-
-app.use(express.urlencoded({extended: true}))
-app.use(express.static(route['pages']))
-
-let clients = new Map;
+const clients = new Map;
 
 function parseCookie(req, key){
 	return req.get('Cookie')?.split(";")
@@ -70,7 +51,40 @@ function subscribe(req, res, next){
 
 	next()
 }
+
+function updateClients(req, res, next){
+	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
+}
+
+function appendClientName(req, res, next) {
+		let clientId = parseCookie(req, 'clientId');
+		res.locals.clientName = clients.get(clientId)?.['name'];
+		next()
+}
+
+//Server
+const app = express()
+const route = config.get('routes') //TODO: create sperate routes for each session
+
+app.use(express.urlencoded({extended: true}))
+app.use(express.static(route['pages']))
+
+const port = config.get('port')
+const hostname = config.util.getEnv('HOSTNAME')
+const server = app.listen(port, hostname, () => {
+	console.log(`Server running at http://${hostname}:${port}/`);
+	
+});
+
+//Ink-Session setup
+const story = Story.load(config.get('story_path'));
+
 app.get(route['eventStream'], subscribe);
+app.get(route['updateLog'], story.updateLog, updateClients);
+app.get(route['updateChoices'], appendClientName, story.updateChoices);
+app.get(route['getMetadata'], story.getMetadata);
+app.post(route['sendChoice'], appendClientName, story.selectChoice, updateClients);
+
 app.on('client disconnected', ()=>{
 	if (clients.length === 0 ) {
 		console.log("All clients disconnected")
@@ -81,51 +95,15 @@ app.on('client disconnected', ()=>{
 	}
 })
 
-app.get(route['updateLog'], story.updateLog, (req, res, next)=>{
-	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
-});
-
-function appendClientName(req, res, next) {
-		let clientId = parseCookie(req, 'clientId');
-		res.locals.clientName = clients.get(clientId)?.['name'];
-		next()
-}
-
-app.get(route['updateChoices'], appendClientName, story.updateChoices);
-
-app.post(route['sendChoice'], appendClientName, story.selectChoice, (req, res, next)=> {
-	clients.forEach( client => client.response.write(`event: New content\ndata:${story.currentLine}\n\n`))
-});
-
-
-app.get(route['getMetadata'], (req, res) => {
-	res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-	const pattern = /^(\w+): (.+)/
-	let metadata = story.globalTags.reduce((map, pair) => {
-		let [_, key, value] = pair.match(pattern)
-		map[key] = value
-		return map
-	},{})
-	res.send(metadata);
-});
-
-
-const port = config.get('port')
-const hostname = config.util.getEnv('HOSTNAME')
-const server = app.listen(port, hostname, () => {
-	console.log(`Server running at http://${hostname}:${port}/`);
-	
-});
-
 process.on('SIGTERM', () => {
-  debug('SIGTERM signal received: closing HTTP server')
+  debug('SIGTERM signal received: closing server')
   server.close(() => {
 	debug('Server closed')
   })
 })
 
 process.on('exit', () => {
-	//story.save()
+	story.save()
 
 	server.close(() => {
 	debug('Server closed')

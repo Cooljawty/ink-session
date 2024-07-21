@@ -19,6 +19,7 @@ class Story extends inkjs.Story {
 			this.cast.set(JSON.parse(key).itemName, null)
 		})
 		
+		this.castClient = this.castClient.bind(this);
 		this.getMetadata = this.getMetadata.bind(this);
 		this.updateLog = this.updateLog.bind(this);
 		this.updateChoices = this.updateChoices.bind(this);
@@ -40,7 +41,7 @@ class Story extends inkjs.Story {
 		return story
 	}
 
-	castClient(client){
+	assignName(client){
 		for (var [name, id] of this.cast.entries()){
 			if (id == client){
 				console.log(client, "recasted as", name)
@@ -125,6 +126,17 @@ class Story extends inkjs.Story {
 		//next()
 	}
 
+	castClient(req, res, next){
+		const clientId = res.locals.clientId;
+
+		let clientName = this.assignName(clientId);
+		res.locals.clientName = clientName;
+
+		res.cookie('name', clientName, {sameSite: 'Strict'})
+
+		next()
+	}
+
 	updateLog(req, res, next){
 		let index = req.body['line']
 		if ( req.query != undefined ) {
@@ -133,10 +145,13 @@ class Story extends inkjs.Story {
 
 		let nextLine = this.getLine(index)
 
+		res.locals.currentLine = this.currentLine;
+
 		res.statusCode = nextLine === undefined ? 204 : 200;
 		res.setHeader('Content-Type', 'text/plain');
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		res.send(nextLine);
+
 
 		next()
 	}
@@ -166,6 +181,8 @@ class Story extends inkjs.Story {
 		if (this.turn == res.locals.clientName) { 
 			this.makeChoice(index, index) 
 		}
+
+		res.locals.currentLine = this.currentLine;
 
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		res.send(this.canContinue);

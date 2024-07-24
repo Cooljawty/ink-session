@@ -139,7 +139,10 @@ class Story extends inkjs.Story {
 
 	//Middleware methods
 	
-	/** Returns any global tags as metadata */
+	/** Returns any global tags as metadata 
+	 *
+	 * return: { tagName: value }
+	 * */
 	getMetadata(req, res, next){
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		const pattern = /^(\w+): (.+)/
@@ -172,6 +175,8 @@ class Story extends inkjs.Story {
 	 *
 	 * The client's current line can be obtained from 
 	 * the request body or as a query
+	 *
+	 * return: { text: String, currentLine: Number }
 	 */
 	updateLog(req, res, next){
 		let index = req.body['line']
@@ -196,6 +201,8 @@ class Story extends inkjs.Story {
 	 *
 	 * If there are choice available to another client then the status
 	 * is set to 204 to indicate the client must wait for someone else to select 
+	 *
+	 * return: [{ index: Number, text: String, tags: Ink.Tag }, ..] 
 	 */
 	updateChoices(req, res, next){
 		let choices = this.turn != res.locals.clientName ? [] : this.currentChoices.map( choice => {

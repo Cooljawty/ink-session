@@ -1,10 +1,9 @@
 const config = require('config')
 
-//TODO: create sperate routes for each session
+
 class Session {
-	constructor(story) {
+	constructor() {
 		this.clients = new Map;
-		this.story = story;
 
 		this.subscribe = this.subscribe.bind(this);
 		this.assignId = this.assignId.bind(this);
@@ -12,6 +11,10 @@ class Session {
 		this.appendClientName = this.appendClientName.bind(this);
 	}
 
+	/** Assigns an id to new connections
+	 *
+	 * Should be called before Session#subscribe
+	 */
 	assignId(req, res, next){
 		let cookieId = parseCookie(req, 'clientId');
 		let clientId = cookieId ? cookieId : Date.now();
@@ -25,6 +28,11 @@ class Session {
 		next()
 	}
 
+	/** Adds connection to list of clients
+	 *
+	 * The clientId should be obtaind by calling Session#assignId
+	 * The clientName is obtaind by calling story#castClient
+	 */
 	subscribe(req, res, next){
 		const clientId = res.locals.clientId;
 		const clientName = res.locals.clientName;
@@ -58,6 +66,7 @@ class Session {
 		next()
 	}
 
+	/** Sends an update event to all connected clients when new content is recived */
 	updateClients(req, res, next){
 		this.clients.forEach( function(client){
 			client.response.write(`event: New content\ndata:${res.locals.currentLine}\n\n`)
@@ -66,6 +75,10 @@ class Session {
 		next()
 	}
 
+	/** Adds the client name from the cookie 
+	 *
+	 * This is needed by Story.updateChoices() and Story.selectChoice()
+	 */
 	appendClientName(req, res, next) {
 			let clientId = parseCookie(req, 'clientId');
 			res.locals.clientName = this.clients.get(clientId)?.['name'];

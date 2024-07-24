@@ -2,10 +2,12 @@ const config = require('config')
 const inkjs = require('inkjs');
 const fs = require('fs');
 
-//Ink Story
 class Story extends inkjs.Story {
 	currentLine = 0;
 
+	/**
+	* file: Path to an .ink file
+	*/
 	constructor(file) {
 		var inkJson = new inkjs.Compiler(file).Compile().ToJson()
 		super(inkJson)
@@ -26,6 +28,11 @@ class Story extends inkjs.Story {
 		this.selectChoice = this.selectChoice.bind(this);
 	}
 
+	/** Loads an ink story and restores it's saved state if one exists
+	 *
+	 * @constructs Story 
+	 * path: Path to an .ink file
+	 */
 	static load(path){
 		var inkFile = fs.readFileSync(path, {encoding: 'UTF-8'});
 		var story   = new Story(inkFile);
@@ -41,6 +48,10 @@ class Story extends inkjs.Story {
 		return story
 	}
 
+	/** Assigns a client to a name in the cast from the global cast list
+	 *
+	 * client: The id of a connected client
+	 */
 	assignName(client){
 		for (var [name, id] of this.cast.entries()){
 			if (id == client){
@@ -60,6 +71,11 @@ class Story extends inkjs.Story {
 		return null
 	}
 
+	/** Gets the current turn based on tags set in the .ink source file
+	 *
+	 * The turn decieds what clients can make a choice selection to continue
+	 * the story.
+	 */
 	updateTurn() {
 		const turnTag = config.get('ink_variables.turn');
 		let pattern = new RegExp(`^${turnTag}: (?<player>.+)`);
@@ -72,6 +88,11 @@ class Story extends inkjs.Story {
 		console.log(`${this.turn}'s turn`)
 	}
 
+	/** Gets the next line of text after a given index
+	 *
+	 *  index: Which line to recive from the story log
+	 *  Returns the requested line of text and the index of the most recent line
+	 */ 
 	getLine(index){
 		if(index <= this.currentLine) {
 			return { 
@@ -102,6 +123,10 @@ class Story extends inkjs.Story {
 		this.currentLine += 1
 	}
 
+	/** Saves the current story state and a log of all preveous lines
+	 *
+	 * The save path is obtained from a configuration file
+	 */
 	save(){
 		const stateSavePath = config.get('save_path.state')
 		const logSavePath = config.get('save_path.log')
@@ -113,6 +138,8 @@ class Story extends inkjs.Story {
 	}
 
 	//Middleware methods
+	
+	/** Returns any global tags as metadata */
 	getMetadata(req, res, next){
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
 		const pattern = /^(\w+): (.+)/
@@ -123,9 +150,13 @@ class Story extends inkjs.Story {
 		},{})
 		res.send(metadata);
 
-		//next()
+		next()
 	}
 
+	/** Assigns the client attached to connection to a name in the cast list
+	 *
+	 * Must be called after Session#assignId in order to get the client's id
+	 */
 	castClient(req, res, next){
 		const clientId = res.locals.clientId;
 
@@ -137,6 +168,11 @@ class Story extends inkjs.Story {
 		next()
 	}
 
+	/** Returns the next line after the current line the client is on
+	 *
+	 * The client's current line can be obtained from 
+	 * the request body or as a query
+	 */
 	updateLog(req, res, next){
 		let index = req.body['line']
 		if ( req.query != undefined ) {
@@ -156,6 +192,11 @@ class Story extends inkjs.Story {
 		next()
 	}
 
+	/** Returns the list of choices availabe to the client
+	 *
+	 * If there are choice available to another client then the status
+	 * is set to 204 to indicate the client must wait for someone else to select 
+	 */
 	updateChoices(req, res, next){
 		let choices = this.turn != res.locals.clientName ? [] : this.currentChoices.map( choice => {
 			return {
@@ -172,6 +213,10 @@ class Story extends inkjs.Story {
 		next()
 	}
 
+	/** Makes a choice selection 
+	 *
+	 * The client's name must match the current turn
+	 */
 	selectChoice(req, res, next){
 		let index = req.body['index']
 		if ( req.query != undefined ) {

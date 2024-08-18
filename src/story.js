@@ -17,6 +17,7 @@ class Story extends inkjs.Story {
 		
 		//Collection of functions that block sending choices to client
 		this.choiceGuards = []; 
+		this.lineGuards = []; 
 
 		this.cast = new Map();
 		if(this.variablesState[config.get('ink_variables.cast')]){
@@ -29,7 +30,7 @@ class Story extends inkjs.Story {
 			this.choiceGuards.push((choice, req, res, next) => 
 				this.turn === undefined || 
 				this.turn === res.locals.clientName
-			});
+			);
 		}
 		
 		this.castClient = this.castClient.bind(this);
@@ -198,12 +199,15 @@ class Story extends inkjs.Story {
 
 		let nextLine = this.getLine(index)
 
+
 		res.locals.currentLine = this.currentLine;
 
 		res.statusCode = nextLine === undefined ? 204 : 200;
 		res.setHeader('Content-Type', 'text/plain');
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
-		res.send(nextLine);
+
+		
+		res.send(this.lineGuards.every(guard => guard(nextLine, req, res, next)) ?  nextLine : null);
 
 
 		next()

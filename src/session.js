@@ -2,7 +2,7 @@ const config = require('config')
 
 
 class Session {
-	constructor() {
+	constructor(app) {
 		this.clients = new Map;
 
 		this.subscribe = this.subscribe.bind(this);
@@ -50,10 +50,12 @@ class Session {
 
 			this.clients.delete(clientId)
 
+			/*
 			setTimeout(
 				function(){ app.emit('client disconnected') }, 
 				config.get('sessionTimeout')
 			)
+			*/
 		})
 
 		res.writeHead(200, {
@@ -62,7 +64,7 @@ class Session {
 		});
 		res.write("data: Subscribed!\n\n")
 
-		console.log(`Client ${clientId} connected`)
+		console.log("Client", clientId, "connected")
 		next()
 	}
 

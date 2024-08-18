@@ -21,7 +21,7 @@ const server = app.listen(port, hostname, () => {
 
 //Ink-Session setup
 const story = Story.load(config.get('story_path'));
-const session = new Session(story);
+const session = new Session();
 //todo create sperate routes for each session
 
 app.get(route['eventStream'], session.assignId, story.castClient, session.subscribe);

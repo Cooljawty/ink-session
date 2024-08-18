@@ -14,12 +14,23 @@ class Story extends inkjs.Story {
 
 		this.log = [];
 		this.currentLine = 0;
+		
+		//Collection of functions that block sending choices to client
+		this.choiceGuards = []; 
 
 		this.cast = new Map();
-		this.variablesState[config.get('ink_variables.cast')]
-			.all.forEach((value, key, map) => {
-			this.cast.set(JSON.parse(key).itemName, null)
-		})
+		if(this.variablesState[config.get('ink_variables.cast')]){
+			this.variablesState[config.get('ink_variables.cast')]
+				?.all.forEach((value, key, map) => {
+				this.cast.set(JSON.parse(key).itemName, null)
+			})
+
+			this.updateTurn()
+			this.choiceGuards.push((choice, req, res, next) => 
+				this.turn === undefined || 
+				this.turn === res.locals.clientName
+			});
+		}
 		
 		this.castClient = this.castClient.bind(this);
 		this.getMetadata = this.getMetadata.bind(this);
@@ -27,6 +38,7 @@ class Story extends inkjs.Story {
 		this.updateChoices = this.updateChoices.bind(this);
 		this.selectChoice = this.selectChoice.bind(this);
 	}
+
 
 	/** Loads an ink story and restores it's saved state if one exists
 	 *
@@ -205,13 +217,19 @@ class Story extends inkjs.Story {
 	 * return: [{ index: Number, text: String, tags: Ink.Tag }, ..] 
 	 */
 	updateChoices(req, res, next){
-		let choices = this.turn != res.locals.clientName ? [] : this.currentChoices.map( choice => {
-			return {
-				index: choice.index,
-				text: choice.text,
-				tags: choice.tags,
-			}
-		})
+		let choices = this.currentChoices
+			.filter( choice => 
+				this.choiceGuards.every( guard => 
+					guard(choice, req, res, next)
+				)
+			)
+			.map( choice => {
+				return {
+					index: choice.index,
+					text: choice.text,
+					tags: choice.tags,
+				}
+			})
 
 		res.statusCode = this.currentChoices.length === 0 ? 204 : 200;
 		res.setHeader('Cache-Control', 'max-age=0, no-cache, no-store, must-revalidate');
@@ -219,6 +237,7 @@ class Story extends inkjs.Story {
 
 		next()
 	}
+
 
 	/** Makes a choice selection 
 	 *

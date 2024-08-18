@@ -90,13 +90,11 @@ async function updateChoices(event){
 			})
 		);
 
-		if ( newChoices.length === 0 ){
-			updates.addEventListener('New content', updateLog, {once: true})
-			updates.addEventListener('New content', updateChoices, {once: true})
+		updates.addEventListener('New content', updateLog, {once: true})
+		updates.addEventListener('New content', updateChoices, {once: true})
 
-			if( waitingForClient ){ 
-				newChoices.push(appendChoice("continue..", continueLog)) 
-			}
+		if( waitingForClient ){ 
+			newChoices.push(appendChoice("continue..", continueLog)) 
 		}
 
 		function appendChoice(text, onclick) {
